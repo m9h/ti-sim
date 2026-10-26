@@ -108,3 +108,51 @@ def modulation_depth(e1, e2):
     hi, lo = np.maximum(a, b), np.minimum(a, b)
     with np.errstate(invalid="ignore", divide="ignore"):
         return np.where(hi > 0, (hi - lo) / hi, 0.0)
+
+
+# --- n carriers (Savvateev 2026 multi-pair, Huang 2026 two-array, TI-Toolbox mTI) ---
+
+def multi_pair_envelope(fields, n):
+    """Exact peak-to-trough envelope along unit vector(s) n for any number of carriers at
+    distinct frequencies, phase free: with a_i = E_i . n the baseband amplitude is the
+    modulus of a sum of phasors of fixed lengths |a_i| whose relative phases drift through
+    every value (incommensurate beat frequencies), so the envelope ranges from
+    max(0, 2 max|a_i| - sum|a_i|) to sum|a_i| and the modulation amplitude is
+
+        E_AM(n) = min( sum_i |a_i|,  2 (sum_i |a_i| - max_i |a_i|) ).
+
+    For two carriers this is 2 min(|a_1|, |a_2|), Grossman's equation 1; for more it is at
+    least Grossman's 2 min|E_i| approximation (`multi_pair_lower_bound`). When the beat
+    frequencies are commensurate (equally spaced carriers) the phases are locked and this is an
+    upper bound; `multi_tone_envelope_bounds` gives the phase-locked value from the waveform."""
+    fields = [np.asarray(f, float) for f in fields]
+    n = _unit(np.broadcast_to(np.asarray(n, float), fields[0].shape))
+    a = np.stack([np.abs((f * n).sum(-1)) for f in fields])  # (k, ...)
+    total = a.sum(0)
+    return np.minimum(total, 2 * (total - a.max(0)))
+
+
+def max_multi_pair_envelope(fields, n_dirs=4000):
+    """Maximum of multi_pair_envelope over sampled directions (no closed form for k > 2)."""
+    fields = [np.asarray(f, float) for f in fields]
+    best = np.zeros(fields[0].shape[:-1])
+    for d in fibonacci_directions(n_dirs):
+        best = np.maximum(best, multi_pair_envelope(fields, d))
+    return best
+
+
+def multi_tone_envelope_bounds(fields, freqs, t, n, phases=None):
+    """(max, min) of the instantaneous amplitude envelope along n over the times t for
+    carriers E_i cos(2 pi f_i t + phi_i): the baseband |sum_i a_i exp(i(2 pi (f_i - f_1) t
+    + phi_i))| with a_i = E_i . n, evaluated at one point (fields of shape (3,) or (1, 3)).
+    With incommensurate beats max - min tends to multi_pair_envelope; with locked phases
+    (commensurate carriers) it is what the tissue actually sees."""
+    fields = [np.asarray(f, float).reshape(-1, 3)[0] for f in fields]
+    n = np.asarray(n, float); n = n / np.linalg.norm(n)
+    freqs = np.asarray(freqs, float); t = np.asarray(t, float)
+    phases = np.zeros(len(fields)) if phases is None else np.asarray(phases, float)
+    a = np.array([f @ n for f in fields])
+    baseband = sum(a_i * np.exp(1j * (2 * np.pi * (f_i - freqs[0]) * t + p_i))
+                   for a_i, f_i, p_i in zip(a, freqs, phases))
+    amp = np.abs(baseband)
+    return float(amp.max()), float(amp.min())

@@ -44,9 +44,14 @@ Ordered by what unblocks what.
    frequency (rises with the carrier, as Gomez-Tames 2021). NEURON is not in Fedora but
    `uv pip install neuron` resolves on Python 3.14; an MRG axon and a layer-5 cell under
    E(t) from a montage are the next step.
-8. **Multi-pair and phase-shifted TI** (Savvateev 2026, Huang 2026 two-array): extend
-   `envelope` to n carriers with the exact envelope (TI-Toolbox's mTI kernel is the
-   reference).
+8. **Multi-pair and phase-shifted TI** (Savvateev 2026, Huang 2026 two-array): done
+   2026-10-26 for the phase-free case, `envelope.multi_pair_envelope` (exact: with
+   a_i = E_i·n the envelope is min(Σ|a_i|, 2(Σ|a_i| − max|a_i|)), which is Grossman's
+   equation 1 for two carriers and ≥ his 2 min|E_i| for more), `max_multi_pair_envelope`
+   (direction sweep; no closed form for k > 2) and `multi_tone_envelope_bounds` (the
+   phase-locked value from the waveform, needed when the carriers are equally spaced and
+   the beats are commensurate: the phase-free formula is then only an upper bound). Still to
+   do: cross-check against TI-Toolbox's mTI kernel on one montage, and use it in `montage`.
 9. **mepkit / open-neuronav tie-in**: TI montages as NaviNIBS targets; stimulator
    control stays out of scope.
 10. **Fedora package** `python-ti-sim` once the API settles (depends on python3-simnibs,
