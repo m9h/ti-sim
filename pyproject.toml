@@ -1,0 +1,26 @@
+[project]
+name = "ti-sim"
+version = "0.0.1"
+description = "Temporal interference (TI) transcranial stimulation simulation: envelopes, phantoms, SimNIBS heads, MIDA"
+requires-python = ">=3.12"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+authors = [{ name = "Morgan Hough", email = "morgan.hough@gmail.com" }]
+dependencies = [
+    "numpy<2.5",  # system numba (SimNIBS) needs <=2.4; the venv sees system site-packages
+    "scipy",
+    "matplotlib",
+    "scikit-fem>=12.0.2",
+    "nibabel",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]  # the venv is --system-site-packages; never collect it
+markers = ["slow: CGAL meshing plus FEM solves, minutes"]
+
+[dependency-groups]
+dev = ["pytest"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

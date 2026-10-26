@@ -1,0 +1,7 @@
+.git
+.venv
+data
+results
+.pytest_cache
+**/__pycache__
+*.png
