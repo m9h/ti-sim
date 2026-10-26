@@ -16,6 +16,7 @@
 
 [**Research notes**](docs/research/README.md) ·
 [**Running it**](docs/running.md) ·
+[**MIDA on the DGX Spark (handoff)**](docs/handoff-dgx-spark.md) ·
 [**Roadmap**](docs/research/05-roadmap.md) ·
 [**References**](docs/research/references.md)
 
