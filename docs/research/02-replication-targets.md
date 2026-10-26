@@ -162,6 +162,34 @@ exact positions are only in their figure). Expect agreement within the Ivanov 20
 noise (2-4 %) plus the conductivity-table and isotropy differences (Yatsuda: < 12 % in
 deep targets). Wessel's montage is the cleaner target because its electrodes are named.
 
+### First MIDA run (DGX Spark, 2026-10-26, 2 mm, Wessel montage)
+
+MIDA v1.0 from Morgan's download, `TI_SIM_MIDA_DS=4` (2 mm voxels), neck cut at z = −60 mm,
+SimNIBS 4.6.0 in the fedora:44 aarch64 container: **1,473,616 tets** in 28.7 min wall
+(meshing is nearly all of it; 5.3 GB RSS). The four fiducials were placed on the label volume
+itself (nasal notch of the midline skin profile for Nz, the posterior midline skin point at
+the same height for Iz, the skin just anterior to each ear canal's lateral opening for LPA/RPA;
+Nz–Iz 194 mm, LPA–RPA 148 mm, `fiducials.json` beside the local MIDA copy, not in git) and
+`ti_sim.electrodes.ten_ten` built 65 positions from them; F3, F4, TP7, TP8 and Cz all land on
+the epidermis label, none on the pinna. They still need a look in Slicer.
+
+Mapping sanity check, mesh volume against the exact voxel count per SimNIBS tag: WM 540 vs
+547 cm³, GM 599 vs 552 (+8 %), CSF 265 vs 294 (−10 %), bone 203 vs 195, scalp 382 vs 381,
+eyes 16.3 vs 16.9, muscle 750 vs 756, hippocampus 4.7 vs 5.0, putamen 5.7 vs 6.1, thalamus
+13.8 vs 14.3; blood 25 vs 43 (thin vessels lost at 2 mm) and the sub-cm³ nuclei (tags 27-29)
+lose 20-80 %. So the 115-structure mapping is right and 2 mm costs the small structures,
+as expected.
+
+Wessel on MIDA at 2 mm (currents normalised to the discrete solution; the SimNIBS flux
+estimate was 2.5 % off for F3-F4 but **64 % off for TP7-TP8**, far more than on ernie, so the
+2 mm pad geometry at the temporo-parietal sites needs checking at 1 mm): E_AM medians
+**putamen 0.549 V/m**, caudate 0.52, nucleus accumbens 0.54, globus pallidus 0.51,
+hippocampus 0.38, thalamus 0.31, GM 0.275 (p99 0.73), brain 0.35. That is 2.1× Wessel's
+striatal 0.26 and 1.5× our ernie 0.35/0.37. Note that halving the peak-to-trough envelope,
+the definition question in `docs/upstream-drafts.md` §2, gives 0.27 against their 0.26 ±
+0.04; the 1 mm run (`mida_ds2.json`, in progress) decides how much is resolution before that
+reading is taken seriously. Violante's montage was skipped (no e1-e4 positions yet).
+
 ## 5. Phantom and cadaver measurements (planned)
 
 * Ghabel Damirchi 2026: paediatric phantom with six dipoles, HD-EEG reconstruction; the
