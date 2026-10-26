@@ -55,13 +55,13 @@ mesh, equipotential scalp patches; `ci/conductivity-admm/sphere_ti_forward.py` i
 neurofedora repo) and the analytic n = 1 Legendre solution of the 4-shell sphere with
 point electrodes, 1 mA per pair at 1:1:
 
-| quantity | analytic (point electrodes) | DOLFINx, 2 mm 1 S/m pads, 634k tets | SimNIBS on the same gmsh mesh (262k tets), corrected current | SimNIBS, our 1 mm voxel mesh |
+| quantity | analytic (point electrodes) | DOLFINx, 2 mm 1 S/m pads, 634k tets | SimNIBS on the same gmsh mesh (262k tets), corrected current | SimNIBS, our 1 mm voxel mesh, corrected current (49k brain tets, ~6 mm) |
 |---|---|---|---|---|
-| \|E\| per pair at the centre | 0.0283 V/m | 0.0259 | 0.0262 | 0.030 (r < 15 mm mean; the brain elements are 6 mm) |
-| E_AM at the centre | 0.0565 | 0.0518 | 0.049–0.051 | 0.044 (one element) |
-| E_AM maximum in the brain | at the centre | 0.0518, centre | 0.0565 nominal → 0.053, centre (depth 77.8 mm) | 0.056 at 55 mm "depth": the argmax of a plateau |
-| \|E₁\| maximum, depth | | 0.299 V/m, 15.0 mm | 0.318, 15.8 mm | 0.313, 14.0 mm |
-| pair resistance | | 280 Ω | 279 Ω (ΔV / I_h) | 307 / 338 Ω (pair asymmetry from the voxel skin) |
+| \|E\| per pair at the centre | 0.0283 V/m | 0.0259 | 0.0262 | 0.0303 (r < 10 mm, volume-weighted) |
+| E_AM at the centre | 0.0565 | 0.0518 | 0.049–0.051 | 0.043 (r < 10 mm); shell medians 0.043, 0.045, 0.040 … 0.027 at 60–70 mm |
+| E_AM maximum in the brain | at the centre | 0.0518, centre | 0.0565 nominal → 0.053, centre (depth 77.8 mm) | 0.052; top-1 % centroid 82 mm deep (the 2026-10-25 "55 mm" was the argmax of a plateau) |
+| \|E₁\| maximum, depth | | 0.299 V/m, 15.0 mm | 0.318, 15.8 mm | 0.287, 16.3 mm (top-1 % centroid) |
+| pair resistance | | 280 Ω | 279 Ω (ΔV / I_h) | 278 / 278 Ω (SimNIBS's nominal currents were 10.7 and 3.6 % off, which made the uncorrected run read 307 / 338) |
 
 Two lessons. The "55 mm deep" maximum reported on 2026-10-25 was noise: the envelope is a
 plateau over the central 30 mm (shell medians 0.044 → 0.030 V/m from the centre outward,
@@ -89,9 +89,12 @@ with Dirichlet conditions and the energy-identity current and found SimNIBS/exac
 0.9985–1.022 (median 1.001). `TesFlexOptimization` uses node currents and is unverified.
 Upstream note drafted in `docs/upstream-drafts.md`.
 
-Our voxel-sphere result at 1:2.5 and 1:4 (2 mA sum): the envelope maximum drops and moves
-to the weaker pair's side, the centre envelope falls from 0.044 to 0.030 V/m; numbers in
-`results/layered_sphere.json` after the corrected rerun.
+The voxel sphere's resistance and |E₁| now agree with the CAD mesh; its centre field is 17 %
+high and the envelope there 17 % low because the brain is still meshed at ~6 mm (the
+`elem_sizes` range passed to `create_mesh` did not refine the interior; open item) and the
+two carriers' fields at one coarse element are neither equal nor parallel. At 1:2.5 and 1:4
+(2 mA sum) the envelope hotspot moves to the weaker pair's side (x-profile peak at −0.53 R)
+and the centre envelope falls 0.043 → 0.035 → 0.024 V/m, Grossman's steering.
 
 ## 3. Rampersad 2019: human head numbers (ernie stands in)
 
