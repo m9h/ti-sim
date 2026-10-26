@@ -23,7 +23,7 @@ meshes beside it, and prints a human summary.
 | example | needs | time | writes |
 |---|---|---|---|
 | `grossman_phantom.py` | nothing | 10 s | peaks/positions/HWHM for layouts A-E vs the paper, `grossman_phantom.png` |
-| `layered_sphere.py` | SimNIBS | ~2 min (mesh cached) | focus depth and steering on the 4-layer sphere |
+| `layered_sphere.py` | SimNIBS | ~13 min first time (2 mm brain sizing field; `TI_SIM_SPHERE_BRAIN_MM`), then cached | focus depth and steering on the 4-layer sphere |
 | `ernie_ti.py` | `TI_SIM_M2M` | ~2.5 min (cached) | ROI statistics for two montages, `ernie_*.msh` for gmsh |
 | `ernie_montage_search.py` | `TI_SIM_M2M`; the lead field (75 solves) takes ~6 min once | 7 min | best two-pair montages for the left hippocampus |
 | `ernie_flex_ti.py` | `TI_SIM_M2M` | smoke run 2 min; 50 × 13 run 11 min | SimNIBS TesFlexOptimization with `max_TI`, two free pairs; final ROI mean from the optimiser's head mesh |

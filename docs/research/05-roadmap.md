@@ -18,10 +18,12 @@ Ordered by what unblocks what.
 * Current normalisation (note 02 §2): `TwoPairSimulation` corrected, lead field verified
   unbiased (`montage.calibrate_leadfield`); check whether `TesFlexOptimization`'s
   node-current electrode model needs it at all (compare one montage against `TwoPairSimulation`).
-* Sphere: the example now reports the top-1 % centroid depth, centre means and shell
-  medians instead of an argmax, but `create_mesh(elem_sizes={"standard": {"range": [1.5, 3.0]}})`
-  still gives ~6 mm brain elements (49k tets): find the parameter that refines the interior
-  (or mesh the sphere with `scripts/gmsh-sphere-mesh.py`, which the cross-check already uses).
+* ~~Sphere interior refinement~~: found 2026-10-26. `elem_sizes` ranges reach CGAL but the
+  final mmg pass in `create_mesh` only honours an explicit `sizing_field`, so the brain of the
+  85 mm sphere stayed at 4.4 mm median / 8 mm p90 edges with range [1.5, 3] and 2.9 / 5.6 mm
+  even with a brain-specific [1, 1.5]. `labelvol.sizing_field_from_tags({2: 2.0})` passed as
+  `mesh_from_labels(..., sizing_field=...)` gives < 2.6 mm medians (test
+  `test_sizing_field_refines_sphere_interior`); the sphere example uses it now.
 
 1. ~~**MIDA with the data**~~: done 2026-10-26 on the DGX Spark (see [02 §4](02-replication-targets.md)):
    parser fixed, meshed at 2, 1 and 0.5 mm (converged at 1 mm, 3.5 M tets, 44 min, 5.5 GB),

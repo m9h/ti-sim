@@ -50,3 +50,38 @@ def test_layered_sphere_ti(tmp_path):
     assert centre["n_elements"] > 20 and np.isfinite(centre["am"]["median"])
     assert 0.01 < centre["am"]["median"] < 20.0  # ~1 mA across a 4 cm sphere: V/m scale
     assert brain["am"]["max"] >= centre["am"]["median"]
+
+
+def test_sizing_field_from_tags():
+    labels = np.array([[[0, 2, 2], [3, 3, 5]]], np.uint16)
+    f = labelvol.sizing_field_from_tags(labels, {2: 2.0, "5": 1.5})
+    assert f.dtype == np.float32 and f.shape == labels.shape
+    assert f[0, 0, 1] == 2.0 and f[0, 1, 2] == 1.5 and f[0, 1, 0] == 0.0 and f[0, 0, 0] == 0.0
+
+
+@pytest.mark.slow
+def test_sizing_field_refines_sphere_interior(tmp_path):
+    """elem_sizes ranges do not survive create_mesh's mmg pass for a thick tissue (brain edges
+    stay 3.5-6 mm); an explicit sizing_field does."""
+    from simnibs import mesh_io
+
+    radii = (40, 37, 34, 32)
+    labels, aff = labelvol.sphere_labels(radii, (5, 4, 3, 2), spacing_mm=1.0, pad_mm=3)
+    work = tmp_path / "work"
+    sf = labelvol.sizing_field_from_tags(labels, {2: 2.0})
+    fn = labelvol.mesh_from_labels(labels, aff, work, "sphere40sf", threads=4, sizing_field=sf)
+    fn0 = labelvol.mesh_from_labels(labels, aff, work, "sphere40sf", threads=4)
+    assert fn != fn0  # the sizing field is part of the cache key
+
+    def brain_edges(path):
+        m = mesh_io.read_msh(path)
+        tets = m.elm.elm_type == 4
+        sel = tets & (m.elm.tag1 == 2)
+        nodes = m.elm.node_number_list[sel][:, :4] - 1
+        p = m.nodes.node_coord[nodes]
+        return np.concatenate([np.linalg.norm(p[:, i] - p[:, j], axis=1)
+                               for i, j in ((0, 1), (0, 2), (0, 3), (1, 2), (1, 3), (2, 3))])
+
+    e_sf, e0 = brain_edges(fn), brain_edges(fn0)
+    assert np.median(e_sf) < 2.6
+    assert np.median(e_sf) < 0.8 * np.median(e0)

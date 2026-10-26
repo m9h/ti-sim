@@ -46,15 +46,29 @@ def sphere_labels(radii_mm, tags, spacing_mm=1.0, pad_mm=4.0, blobs=()):
     return labels, affine
 
 
+def sizing_field_from_tags(labels, sizes_mm):
+    """Per-voxel element size (mm) for create_mesh's `sizing_field`: {tag: size_mm} for the
+    tissues to control, 0 elsewhere (0 = keep the thickness-based size). This is the only
+    size input the final mmg remeshing pass honours, so `elem_sizes` alone cannot refine the
+    interior of a thick tissue (brain of a sphere: 3.5-6 mm edges whatever the range)."""
+    field = np.zeros(labels.shape, np.float32)
+    for tag, size in sizes_mm.items():
+        field[labels == int(tag)] = float(size)
+    return field
+
+
 def mesh_from_labels(labels, affine, workdir, name, elem_sizes=None, facet_distances=None,
-                     extra_tags=(), threads=4, params=None):
-    """SimNIBS create_mesh on a label volume -> path of the cached .msh in workdir."""
+                     extra_tags=(), threads=4, params=None, sizing_field=None):
+    """SimNIBS create_mesh on a label volume -> path of the cached .msh in workdir.
+    `sizing_field`: float array like `labels` with element sizes in mm where > 0 (see
+    `sizing_field_from_tags`); it overrides the thickness-based sizes for CGAL and mmg."""
     from simnibs import mesh_io
     from simnibs.mesh_tools import meshing
 
     os.makedirs(str(workdir), exist_ok=True)
+    sf_key = None if sizing_field is None else hashlib.sha1(np.ascontiguousarray(sizing_field, np.float32).tobytes()).hexdigest()
     key = hashlib.sha1(json.dumps([labels.shape, affine.tolist(), elem_sizes, facet_distances,
-                                   list(extra_tags), params, hashlib.sha1(labels.tobytes()).hexdigest()],
+                                   list(extra_tags), params, hashlib.sha1(labels.tobytes()).hexdigest(), sf_key],
                                   sort_keys=True, default=str).encode()).hexdigest()[:10]
     fn = os.path.join(str(workdir), f"{name}_{key}.msh")
     if os.path.exists(fn):
@@ -63,7 +77,8 @@ def mesh_from_labels(labels, affine, workdir, name, elem_sizes=None, facet_dista
     hierarchy = (1,) + tuple(extra) + DEFAULT_HIERARCHY[1:]  # deep nuclei right after WM/GM
     msh = meshing.create_mesh(labels.astype(np.uint16), affine, elem_sizes=elem_sizes or MESH_SIZES,
                               facet_distances=facet_distances or FACET_DISTANCES,
-                              hierarchy=hierarchy, num_threads=threads)
+                              hierarchy=hierarchy, num_threads=threads,
+                              sizing_field=None if sizing_field is None else np.asarray(sizing_field, np.float32))
     msh = msh.relabel_internal_air()
     mesh_io.write_msh(msh, fn)
     return fn

@@ -25,8 +25,12 @@ SPACING = float(os.environ.get("TI_SIM_SPHERE_VOXEL", 1.0))
 WORK = os.environ.get("TI_SIM_WORK", "data/ti-sim-work")
 radii = (R, R * (1 - 0.05), R * (1 - 0.135), R * (1 - 0.158))
 labels, aff = labelvol.sphere_labels(radii, (5, 4, 3, 2), spacing_mm=SPACING)
+BRAIN_MM = float(os.environ.get("TI_SIM_SPHERE_BRAIN_MM", 2.0))
+# elem_sizes ranges stop at CGAL; create_mesh's mmg pass only honours an explicit sizing
+# field, so the brain interior is refined through one (6 mm elements made the envelope noisy)
 fn = labelvol.mesh_from_labels(labels, aff, WORK, f"sphere{R:g}",
-                               elem_sizes={"standard": {"range": [1.5, 3.0], "slope": 1.0}})  # 3 mm in the brain: 6 mm made the envelope argmax noise
+                               elem_sizes={"standard": {"range": [1.5, 3.0], "slope": 1.0}},
+                               sizing_field=labelvol.sizing_field_from_tags(labels, {2: BRAIN_MM}))
 cond = {1: 0.333, 2: GROSSMAN_SPHERE["brain"], 3: GROSSMAN_SPHERE["csf"], 4: GROSSMAN_SPHERE["skull"],
         5: GROSSMAN_SPHERE["scalp"], 6: 0.5, 7: 0.0083, 8: 0.0083, 9: 0.6, 10: 0.16, 11: 0.88, 12: 0.078}
 
