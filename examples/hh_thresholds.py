@@ -22,9 +22,9 @@ WARM = float(os.environ.get("TI_SIM_HH_WARM", 3.0))
 t0 = time.time()
 thr = {}
 for f in CARRIERS:
-    a = hh.threshold(f, 10.0, lo=0.5, hi=5000.0, duration_ms=150, warm=WARM)
+    a = hh.threshold(f, 10.0, lo=0.5, hi=3000.0, duration_ms=150, warm=WARM)
     thr[f] = {"amplitude_per_carrier_V_per_m": a, "E_AM_max_V_per_m": 2 * a if np.isfinite(a) else None}
-    print(f"carrier {f:6.0f} Hz: threshold A = {a:8.2f} V/m per carrier (E_AM,max {2*a:8.2f})" if np.isfinite(a) else f"carrier {f:6.0f} Hz: no firing below 5000 V/m")
+    print(f"carrier {f:6.0f} Hz: threshold A = {a:8.2f} V/m per carrier (E_AM,max {2*a:8.2f})" if np.isfinite(a) else f"carrier {f:6.0f} Hz: no firing below 3000 V/m per carrier")
 ref = thr[0.0]["E_AM_max_V_per_m"] if 0.0 in thr else None
 results = {"warm": WARM, "beat_hz": 10.0, "polarisation_mm": 0.2, "thresholds": {str(int(k)): v for k, v in thr.items()},
            "esmaeilpour_2021_V_per_m": {str(k): v[0] for k, v in ESMAEILPOUR_2021.items()},

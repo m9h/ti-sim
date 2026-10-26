@@ -143,6 +143,22 @@ PY
     mark_stage sphere
 }
 
+@test "32 HH point neuron: TI firing threshold rises with the carrier frequency" {
+    need_stage unit
+    local out="$TI_SIM_RESULTS/hh_thresholds.json"
+    TI_SIM_OUT="$out" run -0 py examples/hh_thresholds.py
+    echo "$output" | grep -E 'carrier|plain'
+    python3 -I - "$out" <<'PY'
+import json, sys
+t = json.load(open(sys.argv[1]))["thresholds"]
+e = {k: v["E_AM_max_V_per_m"] for k, v in t.items()}
+assert e["500"] < e["1000"] < e["2000"], e          # Gomez-Tames 2021: threshold rises with the carrier
+assert e["2000"] > 5 * e["0"], e                      # kHz TI needs far more field than a plain 10 Hz field
+assert t["2000"]["ernie_striatum_fraction_of_threshold"] < 0.01
+PY
+    mark_stage hh
+}
+
 @test "40 ernie: SimNIBS example and Wessel 2023 montages, deep ROIs in the literature range" {
     need_stage ernie
     local out="$TI_SIM_RESULTS/ernie_ti.json"
@@ -200,7 +216,7 @@ PY
 }
 
 @test "90 summary" {
-    for s in sync simnibs unit ernie phantom sphere head search sensitivity mida; do
+    for s in sync simnibs unit ernie phantom sphere hh head search sensitivity mida; do
         if [ -f "$TI_SIM_RESULTS/.stage-$s" ]; then echo "  $s: ok"; else echo "  $s: skipped/failed"; fi
     done
     ls -la "$TI_SIM_RESULTS"/*.json 2>/dev/null || true

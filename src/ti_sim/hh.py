@@ -23,7 +23,11 @@ E_NA, E_K, E_L = 50.0, -77.0, -54.4  # mV
 V_REST = -65.0
 
 
+V_CLIP = 150.0  # mV: a diverging Euler step is clipped instead of overflowing the rate exponentials
+
+
 def _rates(v):
+    v = min(max(v, -V_CLIP), V_CLIP)
     an = 0.01 * (v + 55) / (1 - np.exp(-(v + 55) / 10)) if abs(v + 55) > 1e-6 else 0.1
     bn = 0.125 * np.exp(-(v + 65) / 80)
     am = 0.1 * (v + 40) / (1 - np.exp(-(v + 40) / 10)) if abs(v + 40) > 1e-6 else 1.0
@@ -48,7 +52,7 @@ def simulate(t, e_field, polarisation_mm=0.2, warm=1.0, v0=V_REST):
         dt = t[i] - t[i - 1]
         drive = G_L * lam * 1e3 * e[i - 1]  # uA/cm^2: g_L * (mV of polarisation)
         i_ion = G_NA * m**3 * h * (v - E_NA) + G_K * n**4 * (v - E_K) + G_L * (v - E_L)
-        v = v + dt * (drive - i_ion) / C_M
+        v = min(max(v + dt * (drive - i_ion) / C_M, -V_CLIP), V_CLIP)
         an, bn, am, bm, ah, bh = (r * warm for r in _rates(v))
         n += dt * (an * (1 - n) - bn * n)
         m += dt * (am * (1 - m) - bm * m)
