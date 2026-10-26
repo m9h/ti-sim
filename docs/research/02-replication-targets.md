@@ -51,11 +51,20 @@ envelope peaks deeper than the unmodulated field and moves towards the weaker pa
 
 ## 3. Rampersad 2019: human head numbers (ernie stands in)
 
-| quantity | paper | ours (ernie, SimNIBS defaults) |
+| quantity | paper | ours (ernie low-res, SimNIBS conductivities, isotropic; 2026-10-25) |
 |---|---|---|
-| standard montage, 1 mA per pair: hippocampus / pallidum / M1 E_TIfree | 0.064 / 0.11 / 0.25 V/m | `examples/ernie_ti.py` (see results/ernie_ti.json) |
-| optimised, 2 mA total: L hippocampus / R pallidum / L M1 | 0.24 / 0.37 / 0.56 | `examples/ernie_montage_search.py` (TI_SIM_LEADFIELD=1) |
-| tACS same electrodes | slightly higher, 10-30× the volume > 0.25 V/m | `focality_*` in ernie_ti.json |
+| standard montage, 1 mA per pair: hippocampus / pallidum / M1 E_TIfree | 0.064 / 0.11 / 0.25 V/m | SimNIBS example montage F5-P5 / F6-P6, 1 mA, 20 mm: hippocampus 0.15, putamen 0.11, M1 hand 0.145 V/m (ROI medians); GM median 0.10, p99 0.19, max 0.52 |
+| optimised, 2 mA total: L hippocampus / R pallidum / L M1 | 0.24 / 0.37 / 0.56 | `examples/ernie_montage_search.py` (TI_SIM_LEADFIELD=1), not run yet |
+| tACS same electrodes | slightly higher, 10-30× the volume > 0.25 V/m | example montage: brain > 0.2 V/m is 31 cm³ for TI vs 430 cm³ for tACS (14×); tACS GM p99 0.32 vs TI 0.19 |
+
+And Wessel 2023's montage on ernie (F3-F4 / TP7-TP8, 2 mA each, 9.8 mm electrodes):
+putamen medians **0.39 / 0.40 V/m** (left / right), hippocampus 0.40 / 0.36, M1 hand
+0.36 / 0.37, GM median 0.20, p99 0.44; brain > 0.2 V/m: 795 cm³ TI vs 1235 cm³ tACS.
+Wessel on MIDA: striatum 0.26 ± 0.04 (p99 0.35), hand knob 0.20. Ours is 1.5× theirs in the
+striatum and 1.8× in M1, with the low-res ernie (SimNIBS skull 0.010 S/m vs the IT'IS LF
+database, no anisotropy, 8 mm spherical ROIs instead of the striatal label). The deep-to-GM
+median ratio is 1.9, the same qualitative picture as theirs. The MIDA run will show how much
+of the factor is the head and how much the tables.
 
 Different head (ernie vs their 25-year-old male), electrodes and conductivity tables, so
 the comparison is order-of-magnitude and ratio (deep/cortex, TI/tACS), not equality.
