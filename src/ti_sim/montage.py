@@ -76,12 +76,17 @@ class Leadfield:
 
 
 def search_two_pairs(lf, roi, electrodes=None, ratios=(1.0,), total_current=2e-3, top=10,
-                     threshold=None, min_separation_mm=0.0):
+                     threshold=None, shortlist=0, min_roi_fraction=0.7):
     """Enumerate montages (pair1, pair2, I1, I2) with pair1 and pair2 disjoint, from
     `electrodes` (default: all), currents I1 = total / (1 + r), I2 = r I1 for r in `ratios`
     and 1/r. Score = median E_AM,max over `roi` (bool mask on lead-field points). The `top`
     montages are re-scored over GM+WM: p99 outside the ROI and, with `threshold` (V/m), the
-    brain volume above it inside and outside the ROI (mm^3)."""
+    brain volume above it inside and outside the ROI (mm^3).
+
+    With `shortlist` > 0 the best `shortlist` montages by ROI median are all re-scored on
+    the whole brain and a second ranking is returned under "focal": among those within
+    `min_roi_fraction` of the best ROI median, the smallest brain volume above `threshold`
+    outside the ROI (Rampersad 2019's V_0.25 criterion; Lee 2020's trade-off)."""
     names = list(electrodes) if electrodes is not None else [n for n in lf.idx if lf.idx[n] is not None]
     names = [n for n in names if n in lf.idx]  # the reference electrode may be named explicitly
     pairs = list(itertools.combinations(names, 2))
@@ -102,9 +107,9 @@ def search_two_pairs(lf, roi, electrodes=None, ratios=(1.0,), total_current=2e-3
             for q, m in zip(others, med):
                 results.append((float(m), p, q, i1, i2))
     results.sort(key=lambda x: -x[0])
-    out = []
     brain = np.isin(lf.tags, (GM, WM))
-    for med, p, q, i1, i2 in results[:top]:
+
+    def rescore(med, p, q, i1, i2):
         e1, e2 = lf.field(*pairs[p], i1), lf.field(*pairs[q], i2)
         am = envelope.max_envelope(e1, e2)
         row = {"pair1": pairs[p], "pair2": pairs[q], "I1_mA": 1e3 * i1, "I2_mA": 1e3 * i2,
@@ -114,9 +119,19 @@ def search_two_pairs(lf, roi, electrodes=None, ratios=(1.0,), total_current=2e-3
         if threshold is not None:
             row["above_threshold_mm3"] = {"roi": float(lf.volumes[roi & (am > threshold)].sum()),
                                           "outside": float(lf.volumes[brain & ~roi & (am > threshold)].sum())}
-        out.append(row)
-    return {"n_electrodes": len(names), "n_pairs": len(pairs), "n_montages": len(results),
-            "ratios": rset, "total_current_mA": 1e3 * total_current, "best": out}
+        return row
+
+    out = [rescore(*r) for r in results[:top]]
+    res = {"n_electrodes": len(names), "n_pairs": len(pairs), "n_montages": len(results),
+           "ratios": rset, "total_current_mA": 1e3 * total_current, "best": out}
+    if shortlist and threshold is not None and results:
+        rows = out + [rescore(*r) for r in results[top:shortlist]]
+        best_med = rows[0]["roi_median"]
+        ok = [r for r in rows if r["roi_median"] >= min_roi_fraction * best_med]
+        ok.sort(key=lambda r: (r["above_threshold_mm3"]["outside"], -r["roi_median"]))
+        res["focal"] = ok[:top]
+        res["shortlist"] = len(rows)
+    return res
 
 
 def near_target(positions, target, max_distance_mm):

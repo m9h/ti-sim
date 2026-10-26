@@ -42,6 +42,18 @@ def test_search_prefers_equal_parallel_fields():
     assert "above_threshold_mm3" in best and best["above_threshold_mm3"]["roi"] == 2.0
 
 
+def test_focal_ranking_prefers_less_outside_volume():
+    lf = FakeLF()
+    lf.tags = np.array([2, 2, 2])  # all three points are brain; ROI = first point only
+    res = montage.search_two_pairs(lf, np.array([True, False, False]), ratios=(1.0, 2.0), threshold=1e-3,
+                                   top=2, shortlist=10, min_roi_fraction=0.5)
+    assert res["shortlist"] == 10 and len(res["focal"]) == 2  # 15 disjoint pair combos x 3 ratios, 10 shortlisted
+    # uniform fake fields: everything above threshold outside too, so the focal ranking falls
+    # back to the ROI median order among the admissible montages
+    assert res["focal"][0]["roi_median"] >= res["focal"][1]["roi_median"]
+    assert all(r["roi_median"] >= 0.5 * res["best"][0]["roi_median"] for r in res["focal"])
+
+
 def test_electrode_subset_and_near_target():
     pos = {"A": (0, 0, 0), "B": (10, 0, 0), "C": (50, 0, 0)}
     assert montage.near_target(pos, (0, 0, 0), 20) == ["A", "B"]

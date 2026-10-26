@@ -31,12 +31,15 @@ cands = near_target(eeg_positions(M2M), target, RADIUS)
 cands = [c for c in cands if c in lf.idx and lf.idx[c] is not None]
 roi = lf.sphere(target, 8.0)
 t0 = time.time()
-res = search_two_pairs(lf, roi, electrodes=cands, ratios=(1.0, 2.0, 3.0), total_current=2e-3, top=10, threshold=0.25)
+res = search_two_pairs(lf, roi, electrodes=cands, ratios=(1.0, 2.0, 3.0), total_current=2e-3, top=10, threshold=0.25,
+                       shortlist=int(os.environ.get("TI_SIM_SHORTLIST", 300)), min_roi_fraction=0.7)
 res.update({"leadfield": fn, "leadfield_seconds": t_lf, "search_seconds": time.time() - t0,
             "target_subject_mm": list(map(float, target)), "candidates": cands,
             "reference": "Rampersad 2019 L hippocampus optimum 0.24 V/m at 2 mA total"})
 print(f"lead field {t_lf:.0f} s; {res['n_montages']} montages from {res['n_electrodes']} electrodes in {res['search_seconds']:.0f} s")
-for r in res["best"][:5]:
-    print(f"  {r['pair1']} {r['I1_mA']:.2f} mA + {r['pair2']} {r['I2_mA']:.2f} mA: ROI median {r['roi_median']:.3f} V/m, "
-          f"outside p99 {r['brain_p99_outside_roi']:.3f}, >0.25 V/m: roi {r['above_threshold_mm3']['roi']:.0f} / outside {r['above_threshold_mm3']['outside']:.0f} mm3")
+for label, key in (("by ROI intensity", "best"), ("focal (>= 70 % of the best ROI median, least brain > 0.25 V/m outside)", "focal")):
+    print(label)
+    for r in res.get(key, [])[:5]:
+        print(f"  {r['pair1']} {r['I1_mA']:.2f} mA + {r['pair2']} {r['I2_mA']:.2f} mA: ROI median {r['roi_median']:.3f} V/m, "
+              f"outside p99 {r['brain_p99_outside_roi']:.3f}, >0.25 V/m: roi {r['above_threshold_mm3']['roi']:.0f} / outside {r['above_threshold_mm3']['outside']:.0f} mm3")
 save_results(res)
