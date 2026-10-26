@@ -162,7 +162,7 @@ PY
 
 @test "41 ernie montage search (TI_SIM_LEADFIELD=1): lead field + exhaustive two-pair search" {
     need_stage ernie
-    [ "${TI_SIM_LEADFIELD:-0}" = 1 ] || skip "set TI_SIM_LEADFIELD=1 (20-40 min lead field)"
+    [ "${TI_SIM_LEADFIELD:-0}" = 1 ] || skip "set TI_SIM_LEADFIELD=1 (~7 min: lead field + search)"
     local out="$TI_SIM_RESULTS/ernie_montage_search.json"
     TI_SIM_OUT="$out" run -0 py examples/ernie_montage_search.py
     echo "$output"

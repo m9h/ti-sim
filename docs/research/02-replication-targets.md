@@ -59,7 +59,7 @@ skin surface (10 mm electrodes on 1 mm voxels); a finer `skin_facet_size` is the
 | quantity | paper | ours (ernie low-res, SimNIBS conductivities, isotropic; 2026-10-25) |
 |---|---|---|
 | standard montage, 1 mA per pair: hippocampus / pallidum / M1 E_TIfree | 0.064 / 0.11 / 0.25 V/m | SimNIBS example montage F5-P5 / F6-P6, 1 mA, 20 mm: hippocampus 0.15, putamen 0.11, M1 hand 0.145 V/m (ROI medians); GM median 0.10, p99 0.19, max 0.52 |
-| optimised, 2 mA total: L hippocampus / R pallidum / L M1 | 0.24 / 0.37 / 0.56 | `examples/ernie_montage_search.py` (TI_SIM_LEADFIELD=1), not run yet |
+| optimised, 2 mA total: L hippocampus / R pallidum / L M1 | 0.24 / 0.37 / 0.56 | L hippocampus: `examples/ernie_montage_search.py`, lead field over the 10-10 cap (75 solves, 6 min), 189,750 two-pair montages from the 25 electrodes within 90 mm of the target at ratios 1:1, 1:2, 1:3 (29 s): best FC5-P9 + FC3-PO9 at 1 + 1 mA, ROI median **0.293 V/m**, p99 of the rest of the brain 0.42, but 198 cm³ of brain above 0.25 V/m: the intensity optimum is not focal, as Rampersad found (their focal montage sacrifices intensity) |
 | tACS same electrodes | slightly higher, 10-30× the volume > 0.25 V/m | example montage: brain > 0.2 V/m is 31 cm³ for TI vs 430 cm³ for tACS (14×); tACS GM p99 0.32 vs TI 0.19 |
 
 And Wessel 2023's montage on ernie (F3-F4 / TP7-TP8, 2 mA each, 9.8 mm electrodes):

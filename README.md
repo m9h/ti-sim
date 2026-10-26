@@ -49,7 +49,7 @@ flowchart LR
     P[🧫 2 Phantom<br/>scikit-fem disc, Grossman fig. 2]:::done
     H[🧠 3 Heads<br/>SimNIBS charm · spheres · MIDA]:::done
     M[🎯 4 Montage search<br/>lead fields, ratios, focality]:::done
-    N[🔬 5 Neurons<br/>membrane low-pass · rectification]:::part
+    N[🔬 5 Neurons<br/>membrane low-pass · HH point neuron]:::part
     V[✅ 6 Validation<br/>pytest · BATS · published numbers]:::done
 
     E --> P --> V
@@ -145,8 +145,8 @@ Environment variables, the container and the optional stages are in
 ## 🗂️ Layout
 
 ```
-src/ti_sim/      envelope · phantom · head · electrodes · labelvol · mida · montage · membrane · tissues · report
-examples/        grossman_phantom · layered_sphere · ernie_ti · ernie_montage_search · ernie_placement_sensitivity · mida_ti
+src/ti_sim/      envelope · phantom · head · electrodes · labelvol · mida · montage · membrane · hh · tissues · report
+examples/        grossman_phantom · layered_sphere · ernie_ti · ernie_montage_search · ernie_flex_ti · ernie_placement_sensitivity · mida_ti
 tests/           pytest units + pipeline.bats (numbers asserted against the papers)
 scripts/         run-pipeline · fetch-ernie · check-mida · container-run
 docs/research/   the research notes summarised above

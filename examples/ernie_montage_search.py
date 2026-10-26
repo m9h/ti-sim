@@ -3,8 +3,8 @@ every two-pair montage from the electrodes within TI_SIM_SEARCH_RADIUS mm (defau
 the target, at current ratios 1:1, 1:2, 1:3 with a 2 mA sum (Rampersad 2019: 2 mA total;
 Lee 2020/2026: exhaustive search restricted to target-specific candidates).
 
-The lead field is one SimNIBS solve per electrode (~70 on the 10-10 cap; 20-40 min on the
-low-res ernie) and is cached. Rampersad's optimum for the left hippocampus was 0.24 V/m
+The lead field is one SimNIBS solve per electrode (75 on the 10-10 cap; 6 min on the
+low-res ernie with 6 threads) and is cached. Rampersad's optimum for the left hippocampus was 0.24 V/m
 (free direction) with 2 mA total.
 
     TI_SIM_M2M=data/m2m_ernie TI_SIM_OUT=results/ernie_montage_search.json uv run examples/ernie_montage_search.py

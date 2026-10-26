@@ -23,15 +23,19 @@ Ordered by what unblocks what.
    Still needed: the four MIDA fiducial coordinates.
 3. **The amplitude factor** in the phantom: write to Grossman's group? (Morgan's call;
    draft in docs/upstream-drafts.md) or find the definition in the Cell supplement.
-4. **Lead field on ernie** (`TI_SIM_LEADFIELD=1`, 20-40 min) and the Rampersad
-   comparison; then wrap `TesFlexOptimization` for free electrode placement.
+4. ~~Lead field on ernie~~: done 2026-10-25 (6 min; L hippocampus optimum 0.293 V/m at
+   2 mA, see [02](02-replication-targets.md)); `TesFlexOptimization` wrapped as
+   `examples/ernie_flex_ti.py` (smoke run); a focality-aware objective for `ti_sim.montage`
+   (Rampersad's volume-above-threshold, Lee 2020's ratio) is the next step.
 5. **Mesh-realisation and placement sensitivity** (Ivanov 2026, Yamada 2026): placement
    done as `examples/ernie_placement_sensitivity.py` (±5 mm, 16 runs); mesh realisations
    need charm reruns (not on the low-res ernie).
 6. **Anisotropy**: `anisotropy_type='vn'` on a charm head with DTI (ernie lowres has none).
-7. **Neuron readout**: NEURON (python3-neuron is in Fedora) with an MRG axon and a
-   layer-5 pyramidal cell under E(t) from a montage; score montages by response, and
-   reproduce Gomez-Tames's carrier-frequency threshold trend.
+7. **Neuron readout**: started with `ti_sim.hh`, a Hodgkin-Huxley point neuron polarised
+   by lambda E(t) (Radman's 0.2 mm), with a bisection for the firing threshold vs carrier
+   frequency (rises with the carrier, as Gomez-Tames 2021). NEURON is not in Fedora but
+   `uv pip install neuron` resolves on Python 3.14; an MRG axon and a layer-5 cell under
+   E(t) from a montage are the next step.
 8. **Multi-pair and phase-shifted TI** (Savvateev 2026, Huang 2026 two-array): extend
    `envelope` to n carriers with the exact envelope (TI-Toolbox's mTI kernel is the
    reference).
