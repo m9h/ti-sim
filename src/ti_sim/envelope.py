@@ -180,3 +180,27 @@ def max_mti_envelope(pairs, n_dirs=4000, envelope_phases=None):
     for d in fibonacci_directions(n_dirs):
         best = np.maximum(best, mti_envelope(pairs, d, envelope_phases))
     return best
+
+
+def mti_modulation_depth(pairs, n, psi=None):
+    """TI-Toolbox's multi-pair modulation depth (Haber et al. 2026; Hirata 2024 for K = 1):
+    with a_k = E_ka . n and b_k = E_kb . n for K pairs that share the beat frequency,
+
+        P = sum_k (a_k^2 + b_k^2) / 2        (carrier power)
+        Q = |sum_k a_k b_k exp(i psi_k)|     (coherent beat phasor)
+        MD = sqrt(2) (sqrt(P + Q) - sqrt(P - Q)),
+
+    the peak-to-trough of the RMS envelope, in which carriers in different bands add in
+    power. K = 1 gives 2 min(|a|, |b|); two equal in-phase pairs give 2 sqrt(2) where
+    `mti_envelope` (envelopes adding in amplitude, the instantaneous peak) gives 4. Which of
+    the two a neuron sees depends on its demodulation (RMS-like vs rectifying); both are
+    kept. Evaluated with the cancellation-free form 2 sqrt(2) Q / (sqrt(P+Q) + sqrt(P-Q))."""
+    a = [((np.asarray(e1, float)) * _unit(np.broadcast_to(np.asarray(n, float), np.asarray(e1, float).shape))).sum(-1) for e1, _ in pairs]
+    b = [((np.asarray(e2, float)) * _unit(np.broadcast_to(np.asarray(n, float), np.asarray(e2, float).shape))).sum(-1) for _, e2 in pairs]
+    ph = np.zeros(len(pairs)) if psi is None else np.asarray(psi, float)
+    p = 0.5 * sum(ak * ak + bk * bk for ak, bk in zip(a, b))
+    q = np.abs(sum(ak * bk * np.exp(1j * pk) for ak, bk, pk in zip(a, b, ph)))
+    smax, smin = np.sqrt(np.maximum(p + q, 0.0)), np.sqrt(np.maximum(p - q, 0.0))
+    denom = smax + smin
+    with np.errstate(invalid="ignore", divide="ignore"):
+        return np.where(denom > 0, 2 * np.sqrt(2) * q / denom, 0.0)

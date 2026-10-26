@@ -57,8 +57,15 @@ Ordered by what unblocks what.
    equation 1 for two carriers and ≥ his 2 min|E_i| for more), `max_multi_pair_envelope`
    (direction sweep; no closed form for k > 2) and `multi_tone_envelope_bounds` (the
    phase-locked value from the waveform, needed when the carriers are equally spaced and
-   the beats are commensurate: the phase-free formula is then only an upper bound). Still to
-   do: cross-check against TI-Toolbox's mTI kernel on one montage, and use it in `montage`.
+   the beats are commensurate: the phase-free formula is then only an upper bound).
+   Multipolar TI (band-separated pairs, Botzanowski 2023) added the same day as
+   `mti_envelope` (per-pair envelopes adding in amplitude, the instantaneous peak) and
+   `mti_modulation_depth`, TI-Toolbox's definition (Haber 2026: MD = √2(√(P+Q) − √(P−Q))
+   with carrier power P and beat phasor Q, i.e. the RMS envelope, in which different bands
+   add in power: two equal in-phase pairs give 2√2, not 4). Both checked against a
+   time-domain waveform; which one a neuron sees depends on its demodulation. Still to do:
+   use them in `montage`; a numerical comparison with TI-Toolbox's direction search
+   (`tit.calc._mti_modulation_depth`, GPL-3, read not copied) on one montage.
 9. **mepkit / open-neuronav tie-in**: TI montages as NaviNIBS targets; stimulator
    control stays out of scope.
 10. **Fedora package** `python-ti-sim` once the API settles (depends on python3-simnibs,

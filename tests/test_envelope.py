@@ -129,3 +129,32 @@ def test_mti_band_separated_pairs_add_their_envelopes():
     assert np.isclose(env.mti_envelope([(e, e), (np.array([[0, 1.0, 0]]),) * 2], [1, 0, 0]), 2.0)
     # a phase offset between the two 50 Hz envelopes reduces the sum: pi gives |2 - 2| = 0
     assert np.isclose(env.mti_envelope(pairs, [1, 0, 0], envelope_phases=[0, np.pi]), 0.0, atol=1e-12)
+
+
+def test_mti_modulation_depth_is_ti_toolbox_definition_and_time_domain_rms():
+    """TI-Toolbox (Haber 2026) defines the multi-pair modulation depth from the carrier power
+    P = sum_k (a_k^2 + b_k^2) / 2 and the coherent beat phasor Q = |sum_k a_k b_k e^{i psi_k}|:
+    MD = sqrt(2) (sqrt(P + Q) - sqrt(P - Q)), i.e. the peak-to-trough of the RMS envelope,
+    in which carriers of different bands add in power. For one pair it is 2 min(|a|, |b|);
+    for two equal in-phase pairs it is 2 sqrt(2), below the amplitude sum of 4."""
+    e = np.array([[1.0, 0, 0]])
+    rng = np.random.default_rng(3)
+    e1, e2 = rng.normal(size=(40, 3)), rng.normal(size=(40, 3))
+    n = env._unit(rng.normal(size=(40, 3)))
+    assert np.allclose(env.mti_modulation_depth([(e1, e2)], n), env.directional_envelope(e1, e2, n))
+    assert np.isclose(env.mti_modulation_depth([(e, e), (e, e)], [1, 0, 0]), 2 * np.sqrt(2))
+    assert np.isclose(env.mti_modulation_depth([(e, e), (e, e)], [1, 0, 0], psi=[0, np.pi]), 0.0, atol=1e-12)
+    # time domain: 1975/2025 and 2975/3025 Hz, a = b = 1 V/m along x
+    f = [1975.0, 2025.0, 2975.0, 3025.0]
+    t = np.arange(0, 0.1, 1e-6)
+    x = sum(np.cos(2 * np.pi * fi * t) for fi in f)
+    # RMS over 1 ms windows (one inter-band beat cycle, 1/20 of the 50 Hz beat): sqrt(2) x RMS
+    # envelope; the box window still attenuates the beat term slightly (sinc(0.05) = 0.996), which
+    # pulls the trough up, so the match is at the 5 % level, well away from the amplitude sum of 4
+    w = 1000
+    rms = np.sqrt(np.convolve(x * x, np.ones(w) / w, mode="valid"))
+    md_rms = np.sqrt(2) * (rms.max() - rms.min())
+    assert np.isclose(md_rms, 2 * np.sqrt(2), rtol=0.06) and md_rms < 3.2
+    # the instantaneous peak envelope instead reaches the amplitude sum: max |x| = 4, min over the beat ~ 0
+    env_peak = np.abs(x[:100000]).reshape(-1, 400).max(1)  # 0.4 ms windows: one carrier cycle
+    assert np.isclose(env_peak.max() - env_peak.min(), env.mti_envelope([(e, e), (e, e)], [1, 0, 0])[0], rtol=0.03)
