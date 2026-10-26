@@ -10,7 +10,8 @@
 #
 # To obtain it: https://itis.swiss/virtual-population/regional-human-models/mida-model/
 # (DOI 10.13099/ViP-MIDA-V1.0; register with the form on the "MIDA V1.0" page), unpack
-# the voxel model (MAT/RAW/NII/TXT) under MIDA_DIR, then `export TI_SIM_MIDA=MIDA_DIR`.
+# the voxel model under MIDA_DIR (MIDA_v1.0/MIDA_v1_voxels/MIDA_v1.nii and MIDA_v1.txt),
+# then `export TI_SIM_MIDA=MIDA_DIR`.
 set -euo pipefail
 DIR="${1:-${TI_SIM_MIDA:-$PWD/data/mida}}"
 if [ ! -d "$DIR" ]; then
@@ -20,15 +21,19 @@ fi
 nii=$(find "$DIR" -iname '*.nii' -o -iname '*.nii.gz' | head -1)
 txt=$(find "$DIR" -iname '*.txt' | head -1)
 [ -n "$nii" ] || { echo "no .nii/.nii.gz label volume under $DIR" >&2; exit 1; }
-[ -n "$txt" ] || { echo "no .txt label list under $DIR" >&2; exit 1; }
 echo "label volume: $nii"
-echo "label names:  $txt"
+echo "label names:  ${txt:-(none: the embedded MIDA v1.0 table will be used)}"
 python3 -I - "$DIR" <<'PY'
 import sys
 sys.path.insert(0, "src")
 from ti_sim import mida
 nii, txt = mida.find_files(sys.argv[1])
-names = mida.parse_label_file(txt)
+names = dict(mida.MIDA_V1_LABELS)
+if txt:
+    try:
+        names = mida.parse_label_file(txt)
+    except ValueError as e:
+        print(f"{txt}: {e}; using the embedded v1.0 table")
 mapping = mida.classify(names)
 print(f"{len(names)} structures parsed, all mapped to SimNIBS tags; hippocampus label(s): "
       f"{[k for k, v in mapping.items() if v == mida.HIPPOCAMPUS]}")

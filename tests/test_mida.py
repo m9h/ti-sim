@@ -24,6 +24,14 @@ def test_every_table1_structure_is_classified():
     assert set(m.values()) <= set(range(0, 13)) | set(mida.EXTRA_COND)
 
 
+def test_download_numbering_is_classified():
+    m = mida.classify(mida.MIDA_V1_LABELS)
+    assert len(m) == 116 and m[50] == 0 and m[5] == mida.HIPPOCAMPUS and m[116] == mida.THALAMUS
+    assert m[12] == 1 and m[10] == 2 and m[52] == 8 and m[40] == 4 and m[1] == 3
+    assert m[19] == 2 and m[88] == 5  # hypophysis is brain tissue, the salivary glands are scalp-like
+    assert sum(v == 0 for v in m.values()) == 10  # background + 7 sinuses/cavities + 2 ear canals
+
+
 def test_unknown_name_raises():
     with pytest.raises(ValueError, match="no tissue rule"):
         mida.classify({1: "Hippocampus", 2: "Flux Capacitor"})
