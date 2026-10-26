@@ -138,9 +138,14 @@ the target is set by the weaker pair, so placement tolerance is asymmetric betwe
 (10 mm, 1 mA each) maximising mean E_AM,max in the 8 mm left-hippocampus sphere. The smoke
 run (2 iterations, population 4) took 98 s and ended at 0.26 V/m during the search (node-wise
 sources) and 0.15 V/m in the final simulation with real electrodes: already Rampersad's
-range at half his total current (the optimiser's own electrode model prescribes node
-currents, so its fields are not subject to the `fem.tdcs` normalisation bias of §2, but this
-has not been checked against `TwoPairSimulation` yet). The 50 × 13 run converged after 22 generations and
+range at half his total current. The optimiser's own electrode model prescribes node
+currents, so its search values are not subject to the `fem.tdcs` normalisation bias of §2;
+its *final* real-electrode simulation is (checked 2026-10-26 on the Spark,
+`scripts/flex-vs-twopair.py`: the smoke run's final ROI mean of 0.347 V/m is reproduced by
+`TwoPairSimulation` on the same four electrode centres *before* correction, 0.353, and the
+discrete currents on those electrodes are +10.1 % and −0.8 % off, so the corrected value is
+0.332 V/m, 4 % lower; the final-sim meshes carry only E, not v and J, so the correction has
+to come from a `TwoPairSimulation` rerun). The flex numbers quoted here are uncorrected. The 50 × 13 run converged after 22 generations and
 2392 FEM evaluations (11 min, 2.6 GB): best node-wise value 0.407 V/m; the final simulation
 with real 10 mm electrodes gives a **ROI mean of 0.453 V/m (median 0.423) at 1 mA per
 pair**, 1.5× the cap-restricted lead-field optimum (0.293 at 2 mA) and 1.9× Rampersad's

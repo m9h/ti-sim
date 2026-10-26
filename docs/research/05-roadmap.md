@@ -15,9 +15,12 @@ Ordered by what unblocks what.
 
 ## Next
 
-* Current normalisation (note 02 §2): `TwoPairSimulation` corrected, lead field verified
-  unbiased (`montage.calibrate_leadfield`); check whether `TesFlexOptimization`'s
-  node-current electrode model needs it at all (compare one montage against `TwoPairSimulation`).
+* ~~Current normalisation~~ (note 02 §2): `TwoPairSimulation` corrected, lead field verified
+  unbiased; `TesFlexOptimization` checked 2026-10-26 (`scripts/flex-vs-twopair.py`): its
+  final real-electrode simulation goes through `fem.tdcs` and carries the same bias (+10 % on
+  one pair of the smoke montage, final ROI mean 0.347 → 0.332 V/m corrected); the search
+  itself uses node currents and is unaffected. Report flex results through a
+  `TwoPairSimulation` rerun of the optimised centres.
 * ~~Sphere interior refinement~~: found 2026-10-26. `elem_sizes` ranges reach CGAL but the
   final mmg pass in `create_mesh` only honours an explicit `sizing_field`, so the brain of the
   85 mm sphere stayed at 4.4 mm median / 8 mm p90 edges with range [1.5, 3] and 2.9 / 5.6 mm
