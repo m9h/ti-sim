@@ -51,6 +51,23 @@ def test_parse_label_file_both_layouts(tmp_path):
         mida.parse_label_file(f3)
 
 
+def test_parse_label_file_download_layout(tmp_path):
+    """The real MIDA_v1.txt: 'index<TAB>r<TAB>g<TAB>b<TAB>name' (colour floats between index
+    and name, names with spaces, slashes and parentheses, a non-ASCII byte in 'Skull Diploë'),
+    then a trailer with the grid extent and spacing that must not become labels."""
+    names = {i + 1: n for i, n in enumerate(mida.TABLE1)}
+    names[52] = "Skull Diploë"
+    names[116] = "Thalamus"
+    body = "\n".join(f"{k}\t{(k % 7) / 7:.6f}\t{(k % 3) / 3:.6f}\t1\t{v}" for k, v in names.items())
+    trailer = "\nGrid extent (number of cells)\nnx\t480\nny\t480\nnz\t350\nSpatial steps [m]\ndx\t0.0005\ndy\t0.0005\ndz\t0.0005\n"
+    f = tmp_path / "MIDA_v1.txt"
+    f.write_text(body + trailer, encoding="utf-8")
+    parsed = mida.parse_label_file(f)
+    assert parsed == names
+    assert 480 not in parsed and "nx" not in parsed.values()
+    assert set(mida.classify(parsed)) == set(names)  # every download label has a tissue rule
+
+
 def test_relabel_crop_downsample():
     labels = np.zeros((8, 8, 8), np.uint16)
     labels[2:6, 2:6, 2:6] = 7

@@ -134,11 +134,18 @@ def parse_label_file(fn):
     """{label: name} from MIDA's label text file: lines of 'index name' or 'name index'
     (tab or space separated; the download's exact layout is accepted either way)."""
     names = {}
+    num = r"[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?"
+    trailer = ("grid extent", "spatial steps", "nx", "ny", "nz", "dx", "dy", "dz")
     for line in open(fn, encoding="utf-8", errors="replace"):
         line = line.strip()
         if not line or line.startswith("#"):
             continue
-        m = re.match(r"^(\d+)\s+(.+?)$", line) or re.match(r"^(.+?)\s+(\d+)$", line)
+        low = line.lower()
+        if low.startswith(trailer) and not re.match(r"^\d+\s", line):
+            continue  # the download's grid-size and voxel-spacing trailer
+        # the download: 'index r g b name' (three colour components before the name)
+        m = (re.match(rf"^(\d+)\s+{num}\s+{num}\s+{num}\s+(.+?)$", line)
+             or re.match(r"^(\d+)\s+(.+?)$", line) or re.match(r"^(.+?)\s+(\d+)$", line))
         if not m:
             continue
         a, b = m.groups()

@@ -12,6 +12,7 @@ FROM ${BASE}
 COPY container/mhough-neurofedora.repo /etc/yum.repos.d/
 RUN dnf -y --setopt=install_weak_deps=False install \
         python3-simnibs simnibs-data python3 bats git-core curl unzip \
+        mmg3d meshfix cat-surface time \
     && dnf clean all \
     && python3 -c 'import simnibs; print("simnibs", simnibs.__version__)'
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
