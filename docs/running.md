@@ -67,6 +67,13 @@ scripts/container-run.sh run        # the pipeline; ./inputs -> /data, ./outputs
 Put `m2m_ernie` (or let `TI_SIM_FETCH=1` fetch it) and a MIDA copy under `inputs/`.
 MIDA must never be baked into an image (licence).
 
+## NEURON (optional)
+
+`ti_sim.axon` needs NEURON, which is not in Fedora: `uv pip install neuron` (9.0.2 wheels
+exist for x86_64 and aarch64; nothing needs compiling because the cable uses NEURON's
+built-in `hh` and `extracellular` mechanisms). `tests/test_axon.py` is skipped without it.
+In the container, add `RUN cd /opt/ti-sim && uv pip install neuron` to a derived image.
+
 ## gmsh
 
 `TwoPairSimulation.write_msh` writes |E₁|, |E₂|, `TImax` and `tACS` element fields;

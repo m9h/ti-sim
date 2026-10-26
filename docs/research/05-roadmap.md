@@ -49,8 +49,14 @@ Ordered by what unblocks what.
 7. **Neuron readout**: started with `ti_sim.hh`, a Hodgkin-Huxley point neuron polarised
    by lambda E(t) (Radman's 0.2 mm), with a bisection for the firing threshold vs carrier
    frequency (rises with the carrier, as Gomez-Tames 2021). NEURON is not in Fedora but
-   `uv pip install neuron` resolves on Python 3.14; an MRG axon and a layer-5 cell under
-   E(t) from a montage are the next step.
+   `uv pip install neuron` (9.0.2) installs and runs on aarch64 too. Second step done
+   2026-10-26: `ti_sim.axon`, a straight HH cable in NEURON under E(t) through the
+   `extracellular` mechanism (phi = −E·x, sealed ends, no compiled mod files): a 10 mm, 2 µm
+   axon at 6.3 C fires at ~20 V/m per carrier for a plain 10 Hz field, ~200 at a 1 kHz
+   carrier and ~500 at 2 kHz (Esmaeilpour's slice threshold at 2 kHz is 80 V/m); squid HH
+   does not fire at 37 C, so warming needs mammalian channels. Next: MRG (McIntyre 2002)
+   myelinated axon and an Aberra 2018 layer-5 cell (mod files from ModelDB, licences to check),
+   driven at a montage point via `TwoPairSimulation.fields_at`.
 8. **Multi-pair and phase-shifted TI** (Savvateev 2026, Huang 2026 two-array): done
    2026-10-26 for the phase-free case, `envelope.multi_pair_envelope` (exact: with
    a_i = E_i·n the envelope is min(Σ|a_i|, 2(Σ|a_i| − max|a_i|)), which is Grossman's
