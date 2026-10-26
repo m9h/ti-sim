@@ -74,6 +74,22 @@ of the factor is the head and how much the tables.
 Different head (ernie vs their 25-year-old male), electrodes and conductivity tables, so
 the comparison is order-of-magnitude and ratio (deep/cortex, TI/tACS), not equality.
 
+### Placement sensitivity (Yamada 2026) and free placement (TesFlexOptimization)
+
+`examples/ernie_placement_sensitivity.py`: each Wessel electrode moved ±5 mm along two
+tangential scalp directions, 16 runs (17 min). Putamen median changes: F3 up to 7.0 %,
+F4 3.8 %, TP7 3.1 %, **TP8 12.3 %** (the electrode nearest the right putamen); Yamada report
+0.4-14.9 % for ±10 mm grids, so the ernie montage sits inside their range with half the
+displacement. The whole-brain envelope maximum never moves (it is cortical, under an
+electrode); the deep hotspot metric is in the JSON.
+
+`examples/ernie_flex_ti.py`: SimNIBS's differential-evolution placement of two free pairs
+(10 mm, 1 mA each) maximising mean E_AM,max in the 8 mm left-hippocampus sphere. The smoke
+run (2 iterations, population 4) took 98 s and ended at 0.26 V/m during the search (node-wise
+sources) and 0.15 V/m in the final simulation with real electrodes: already Rampersad's
+range at half his total current. A 50 × 13 run is recorded in results/ernie_flex_ti_full.json
+when it finishes.
+
 ## 4. Violante 2023 and Wessel 2023 on MIDA (needs the data)
 
 | paper | montage | model numbers |
