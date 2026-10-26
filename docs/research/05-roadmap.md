@@ -23,9 +23,11 @@ Ordered by what unblocks what.
   still gives ~6 mm brain elements (49k tets): find the parameter that refines the interior
   (or mesh the sphere with `scripts/gmsh-sphere-mesh.py`, which the cross-check already uses).
 
-1. **MIDA with the data** (needs Morgan's download, or the KCL colleague's): run
-   `scripts/check-mida.sh`, fix the label-file parser to the real layout, mesh at 1 mm,
-   Wessel's montage, compare to 0.26 V/m in striatum; then Violante's.
+1. ~~**MIDA with the data**~~: done 2026-10-26 on the DGX Spark (see [02 §4](02-replication-targets.md)):
+   parser fixed, meshed at 2, 1 and 0.5 mm (converged at 1 mm, 3.5 M tets, 44 min, 5.5 GB),
+   Wessel's montage 0.49 V/m putamen with the SimNIBS table, 0.45 with Rampersad's; half the
+   peak-to-trough envelope is 0.23, inside Wessel's 0.26 ± 0.04. Still open: Violante's e1-e4
+   positions, and a Slicer check of the fiducial-derived cap.
 2. ~~Electrode positions on MIDA~~: done 2026-10-25, `ti_sim.electrodes.ten_ten` (geodesic
    10-10 from Nz/Iz/LPA/RPA on any skin surface; 6.4 mm mean against ernie's template cap).
    Still needed: the four MIDA fiducial coordinates.

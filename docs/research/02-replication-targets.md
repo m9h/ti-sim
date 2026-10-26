@@ -216,6 +216,18 @@ in the striatum, so the model is mesh-converged at 1 mm and the 1 mm run is the 
 (44 min vs 111). The 1.9× against Wessel's 0.26 stands as a definition/conductivity question,
 not a mesh one.
 
+### Conductivity table on the 1 mm mesh (`TI_SIM_COND=rampersad`)
+
+Same mesh and electrodes, Rampersad's table (skull 0.007 instead of 0.010 S/m, eyes 1.5),
+7.6 min for the two solves on the cached mesh: putamen median **0.453 V/m** (p99 0.56),
+caudate 0.44, hippocampus 0.33, thalamus 0.27, GM 0.249. The lower skull conductivity takes
+8 % off the deep medians. With that table the striatum is 1.7× Wessel's 0.26 ± 0.04, and
+halving the peak-to-trough envelope (the SimNIBS/Grossman definition we use against the
+"modulation amplitude" that Sim4Life's TI reports) gives **0.23 V/m, inside their
+0.22-0.30**. So the head, the montage and the mapping reproduce Wessel's striatal number once
+the envelope definition is fixed; the remaining uncertainty is which definition they report,
+which is the question in `docs/upstream-drafts.md` §1-2.
+
 ## 5. Phantom and cadaver measurements (planned)
 
 * Ghabel Damirchi 2026: paediatric phantom with six dipoles, HD-EEG reconstruction; the
