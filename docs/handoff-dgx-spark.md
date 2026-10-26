@@ -33,8 +33,12 @@ memory than this host has. Everything else in the repo has run here and is green
    `uv run pytest -q -m "not slow"` (~10 s). Nothing uses the GPU; SimNIBS's FEM is CPU
    (pardiso is x86-only, so SimNIBS will use its PETSc/scipy path on aarch64: expect
    slower solves than the ernie timings in `docs/running.md`, which are x86 pardiso).
-3. **MIDA.** Copy Morgan's download from the NAS to a local directory, e.g. `data/mida/`
-   (gitignored). Needed: `MIDA_v1.nii` (or `.nii.gz`) and optionally `MIDA_v1.txt`, found
+3. **MIDA.** Morgan's download is on the lab TrueNAS export `192.168.108.117:/mnt/tank/shared`
+   (legion mounts it at `/data`): `datasets/MIDAv1-0/MIDA_v1.0/MIDA_v1_voxels/` holds
+   `MIDA_v1.nii`, `.txt`, `.mat`, `.raw`, with `MIDA_v1_surfaces/` beside it; the `__MACOSX/`
+   sibling is AppleDouble stubs, ignore it (per the 3dslicer session, 2026-10-26). Read from
+   the NAS export, not through legion, and copy the voxel files to a local directory,
+   e.g. `data/mida/` (gitignored). Needed: `MIDA_v1.nii` (or `.nii.gz`) and optionally `MIDA_v1.txt`, found
    recursively. Run `scripts/check-mida.sh data/mida`, then `export TI_SIM_MIDA=$PWD/data/mida`.
    Licence (`docs/research/04-mida.md`): never commit, package, containerise or upload the
    volume, any crop or mesh of it, or an undisguised face image. Caches go to
