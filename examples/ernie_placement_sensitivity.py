@@ -1,8 +1,8 @@
 """Electrode-placement sensitivity of a TI montage (Yamada et al. 2026, Phys Med Biol):
 each electrode of Wessel 2023's striatal montage (F3-F4 / TP7-TP8, 2 mA, 9.8 mm) is moved
 +-5 mm along two tangential directions on the scalp, one electrode at a time (16 runs plus
-the reference), and the ROI median envelope and the deep hotspot (envelope maximum within
-25 mm of the targets' midpoint) are compared. Yamada
+the reference), and the ROI median envelope and the deep hotspot (volume-weighted centroid of the top 1 %
+of the envelope within 25 mm of the targets' midpoint) are compared. Yamada
 report 0.4-15 % intensity sensitivity and 0.6-6.9 mm hotspot displacement for +-10 mm
 grids; this is the +-5 mm ring of that grid on ernie.
 
@@ -58,9 +58,11 @@ def run(positions, label):
     # brain maximum sits in cortex under an electrode and says nothing about the deep focus)
     mid = np.mean(list(targets.values()), axis=0)
     deep = brain & (np.linalg.norm(sim.centres - mid, axis=1) < 25.0)
-    i = np.argmax(np.where(deep, sim.am_max, -1))
-    row["hotspot_mm"] = list(map(float, sim.centres[i]))
-    row["deep_max"] = float(sim.am_max[i])
+    # a single element's maximum is a mesh artefact that never moves; the hotspot is the
+    # volume-weighted centroid of the top 1 % of the deep envelope
+    top = deep & (sim.am_max >= np.percentile(sim.am_max[deep], 99))
+    row["hotspot_mm"] = list(map(float, np.average(sim.centres[top], axis=0, weights=sim.volumes[top])))
+    row["deep_p99"] = float(np.percentile(sim.am_max[deep], 99))
     row["brain_max"] = float(sim.am_max[brain].max())
     row["gm_median"] = sim.stats(sim.in_tags(GM))["am"]["median"]
     print(f"{label:12s} L putamen {row['L putamen']['median']:.3f} R {row['R putamen']['median']:.3f} V/m, "

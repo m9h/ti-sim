@@ -80,8 +80,9 @@ the comparison is order-of-magnitude and ratio (deep/cortex, TI/tACS), not equal
 tangential scalp directions, 16 runs (17 min). Putamen median changes: F3 up to 7.0 %,
 F4 3.8 %, TP7 3.1 %, **TP8 12.3 %** (the electrode nearest the right putamen); Yamada report
 0.4-14.9 % for ±10 mm grids, so the ernie montage sits inside their range with half the
-displacement. The whole-brain envelope maximum never moves (it is cortical, under an
-electrode); the deep hotspot metric is in the JSON.
+displacement. The deep hotspot (volume-weighted centroid of the top 1 % of the envelope
+within 25 mm of the targets' midpoint; a single element's maximum is a mesh artefact that
+never moves) shifts by up to 8.8 mm (F3), 2.7 (F4), 5.9 (TP7), 4.2 (TP8); Yamada: 0.6-6.9 mm.
 
 `examples/ernie_flex_ti.py`: SimNIBS's differential-evolution placement of two free pairs
 (10 mm, 1 mA each) maximising mean E_AM,max in the 8 mm left-hippocampus sphere. The smoke
