@@ -156,3 +156,27 @@ def multi_tone_envelope_bounds(fields, freqs, t, n, phases=None):
                    for a_i, f_i, p_i in zip(a, freqs, phases))
     amp = np.abs(baseband)
     return float(amp.max()), float(amp.min())
+
+
+def mti_envelope(pairs, n, envelope_phases=None):
+    """Multipolar TI (Botzanowski et al. 2023; TI-Toolbox's mTI): k electrode pairs in
+    separate carrier bands, each pair beating at the same Delta f (e.g. 1975/2025 Hz and
+    2975/3025 Hz). The inter-band beats (~1 kHz) are above what the membrane follows, so the
+    tissue sees the sum of the k low-frequency envelopes. Along n each pair contributes its
+    two-field envelope E_AM,k(n) (`directional_envelope`); with the envelopes in phase the
+    total is sum_k E_AM,k(n), and with phase offsets phi_k between the Delta f envelopes it is
+    |sum_k E_AM,k(n) exp(i phi_k)|. `pairs` = [(E1, E2), ...] with (..., 3) arrays."""
+    amps = [directional_envelope(e1, e2, n) for e1, e2 in pairs]
+    if envelope_phases is None:
+        return np.sum(amps, axis=0)
+    ph = np.asarray(envelope_phases, float)
+    return np.abs(sum(a * np.exp(1j * p) for a, p in zip(amps, ph)))
+
+
+def max_mti_envelope(pairs, n_dirs=4000, envelope_phases=None):
+    """Maximum of mti_envelope over sampled directions."""
+    first = np.asarray(pairs[0][0], float)
+    best = np.zeros(first.shape[:-1])
+    for d in fibonacci_directions(n_dirs):
+        best = np.maximum(best, mti_envelope(pairs, d, envelope_phases))
+    return best

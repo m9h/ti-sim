@@ -113,3 +113,19 @@ def test_phase_locked_commensurate_carriers_can_have_smaller_envelope():
     hi2, lo2 = env.multi_tone_envelope_bounds(fields, f, t, n=[1, 0, 0], phases=[0, np.pi / 2, 0])
     assert hi2 - lo2 <= env.multi_pair_envelope(fields, [1, 0, 0])[0] + 1e-9
     assert lo2 > lo + 0.05
+
+
+def test_mti_band_separated_pairs_add_their_envelopes():
+    """Multipolar TI (Botzanowski 2023, TI-Toolbox mTI): pairs in separate carrier bands
+    (1975/2025 and 2975/3025 Hz) each make a 50 Hz envelope; the kHz beat between the bands is
+    filtered by the membrane, and the two 50 Hz envelopes add when their phases align."""
+    e = np.array([[1.0, 0, 0]])
+    pairs = [(e, e), (e, e)]
+    assert np.isclose(env.mti_envelope(pairs, [1, 0, 0]), 4.0)  # 2 + 2, in phase
+    assert np.isclose(env.max_mti_envelope(pairs, n_dirs=2000), 4.0, rtol=0.02)
+    # half-amplitude pairs match a single full-amplitude pair's envelope with less carrier
+    assert np.isclose(env.mti_envelope([(0.5 * e, 0.5 * e), (0.5 * e, 0.5 * e)], [1, 0, 0]), 2.0)
+    # orthogonal second pair contributes nothing along x
+    assert np.isclose(env.mti_envelope([(e, e), (np.array([[0, 1.0, 0]]),) * 2], [1, 0, 0]), 2.0)
+    # a phase offset between the two 50 Hz envelopes reduces the sum: pi gives |2 - 2| = 0
+    assert np.isclose(env.mti_envelope(pairs, [1, 0, 0], envelope_phases=[0, np.pi]), 0.0, atol=1e-12)
