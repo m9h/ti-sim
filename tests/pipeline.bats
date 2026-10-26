@@ -170,6 +170,23 @@ PY
     mark_stage search
 }
 
+@test "42 ernie placement sensitivity (TI_SIM_SENSITIVITY=1): +-5 mm per electrode, Yamada 2026 ranges" {
+    need_stage ernie
+    [ "${TI_SIM_SENSITIVITY:-0}" = 1 ] || skip "set TI_SIM_SENSITIVITY=1 (17 SimNIBS runs, ~20 min)"
+    local out="$TI_SIM_RESULTS/ernie_placement_sensitivity.json"
+    TI_SIM_OUT="$out" run -0 py examples/ernie_placement_sensitivity.py
+    echo "$output" | tail -6
+    python3 -I - "$out" <<'PY'
+import json, sys
+s = json.load(open(sys.argv[1]))["summary"]
+for e, row in s.items():  # Yamada: 0.4-15 % intensity change and 0.6-6.9 mm hotspot shift for +-10 mm grids
+    for roi, pct in row["intensity_sensitivity_pct"].items():
+        assert pct < 40, (e, roi, pct)
+    assert row["hotspot_shift_max_mm"] < 30, (e, row)
+PY
+    mark_stage sensitivity
+}
+
 @test "50 MIDA (TI_SIM_MIDA): mapping, mesh and, with electrode positions, the 2023 montages" {
     need_stage simnibs
     [ -n "${TI_SIM_MIDA:-}" ] || skip "set TI_SIM_MIDA (scripts/check-mida.sh)"
@@ -183,7 +200,7 @@ PY
 }
 
 @test "90 summary" {
-    for s in sync simnibs unit ernie phantom sphere head search mida; do
+    for s in sync simnibs unit ernie phantom sphere head search sensitivity mida; do
         if [ -f "$TI_SIM_RESULTS/.stage-$s" ]; then echo "  $s: ok"; else echo "  $s: skipped/failed"; fi
     done
     ls -la "$TI_SIM_RESULTS"/*.json 2>/dev/null || true

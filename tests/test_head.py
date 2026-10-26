@@ -33,5 +33,7 @@ def test_two_pair_ti_on_ernie(tmp_path):
     foc = sim.focality(0.2)
     assert foc["am_mm3"] <= foc["tacs_mm3"]  # TI never covers more brain than tACS
     assert np.isfinite(sim.am_max).all()
+    e1, e2, am = sim.fields_at(np.vstack([centre, [0, 0, 1000.0]]))  # the deep centre and a point outside
+    assert am[0] > 0 and np.all(e1[1] == 0) and am[1] == 0
     fn = sim.write_msh(os.path.join(str(tmp_path), "ti.msh"))
     assert os.path.getsize(fn) > 1000

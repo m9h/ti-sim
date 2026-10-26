@@ -121,6 +121,22 @@ class TwoPairSimulation:
                          "max": float(x.max())}
         return out
 
+    def fields_at(self, points):
+        """(E1, E2, E_AM,max) at points (n, 3) mm: the containing tetrahedron's values, zero
+        outside the mesh (SimNIBS's locator; fine for ROI probes, not for sub-element detail)."""
+        p = np.asarray(points, float).reshape(-1, 3)
+        idx = self.mesh.find_tetrahedron_with_points(p, compute_baricentric=False)
+        tet_index = np.flatnonzero(self.mesh.elm.elm_type == 4)
+        pos = np.full(len(p), -1)
+        ok = idx > 0
+        lookup = np.full(self.mesh.elm.nr + 1, -1)
+        lookup[tet_index + 1] = np.arange(len(tet_index))
+        pos[ok] = lookup[idx[ok]]
+        good = pos >= 0
+        e1, e2, am = np.zeros((len(p), 3)), np.zeros((len(p), 3)), np.zeros(len(p))
+        e1[good], e2[good], am[good] = self.e1[pos[good]], self.e2[pos[good]], self.am_max[pos[good]]
+        return e1, e2, am
+
     def focality(self, threshold, tags=(GM, WM)):
         """Brain volume (mm^3) with E_AM,max above `threshold`, and the same for tACS."""
         m = self.in_tags(tags)
