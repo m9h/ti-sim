@@ -80,11 +80,13 @@ symlinks need when weak deps are off; simnibs 4.6.0-22 fixes the first two); MID
 the NAS export to the T9 (`/mnt/t9/datasets/mida`, never in git); label-file parser fixed for
 the download layout (commit 4fda967); fiducials estimated from the label volume
 (`fiducials.json` beside the MIDA copy); 2 mm and 1 mm runs with Wessel's montage completed
-(`mida_ds4.json`, `mida_ds2.json` under `/mnt/t9/ti-sim-host/outputs`); numbers in
-`docs/research/02-replication-targets.md` §4. The host dir is `/mnt/t9/ti-sim-host`
+(`mida_ds4.json`, `mida_ds2.json` under `/mnt/t9/ti-sim-host/outputs`), and the 0.5 mm
+native run (`mida_ds1.json`: 6.95 M tets, 111 min, 9.9 GB, same striatal numbers as 1 mm);
+numbers in `docs/research/02-replication-targets.md` §4. The host dir is `/mnt/t9/ti-sim-host`
 (`inputs/` → `/data`, `outputs/` → `/results`); runs use `TI_SIM_WORK=/data/ti-sim-work`
 because `examples/mida_ti.py` defaults to a relative path inside the read-only package.
-Open: the 0.5 mm run; Violante's e1-e4; a Slicer check of the constructed electrodes; the
+Open: Violante's e1-e4; the IT'IS conductivity table (`TI_SIM_COND`) and the envelope
+definition against Wessel's 0.26 V/m; a Slicer check of the constructed electrodes; the
 phantom test `test_envelope_map_symmetry_and_peak` picks the mirror peak (y = +0.59) on
 aarch64 for the symmetric layout, so its sign assertion should accept either.
 

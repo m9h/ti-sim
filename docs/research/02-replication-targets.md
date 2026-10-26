@@ -203,7 +203,18 @@ from 2 to 1 mm lowered the deep medians by 8-13 %, so the residual factor agains
 0.26 ± 0.04 (**1.9×**) is not resolution. The candidates are the envelope definition
 (peak-to-trough vs half, exactly a factor 2), the conductivity table (SimNIBS defaults vs the
 IT'IS LF database v4.0 they used, which can be tried with `TI_SIM_COND`) and the missing
-anisotropy. The 0.5 mm native run is in progress for completeness.
+anisotropy.
+
+### The 0.5 mm native run (`TI_SIM_MIDA_DS=1`)
+
+**6,951,295 tets in 111 min, 9.9 GB RSS** (16 threads; far below the handoff's 40-80 GB
+guess). Volumes now match the voxel counts to 1 % (WM 549 vs 547, GM 552 vs 552, CSF 296 vs
+294, blood 38 vs 43, hippocampus 4.9 vs 5.0, putamen 6.0 vs 6.1), current estimates 0.0 % and
+1.2 % off. Wessel medians: **putamen 0.493 V/m** (p99 0.60), caudate 0.47, hippocampus 0.31,
+thalamus 0.29, GM 0.253 (p99 0.60), brain 0.32: identical to the 1 mm run to the third decimal
+in the striatum, so the model is mesh-converged at 1 mm and the 1 mm run is the one to use
+(44 min vs 111). The 1.9× against Wessel's 0.26 stands as a definition/conductivity question,
+not a mesh one.
 
 ## 5. Phantom and cadaver measurements (planned)
 
