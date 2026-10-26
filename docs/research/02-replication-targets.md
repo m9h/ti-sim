@@ -242,5 +242,16 @@ which is the question in `docs/upstream-drafts.md` §1-2.
 
 ## 6. Neural response (planned)
 
+First montage-driven readout (2026-10-26, `examples/ernie_axon_readout.py`): a 10 mm, 2 µm
+HH cable (`ti_sim.axon`, NEURON, 6.3 C) aligned with the envelope direction at ernie's left
+putamen under Wessel's montage (E_AM,max 0.347 V/m there, |E1| 0.17, |E2| 0.22). The
+montage's own E1(t) + E2(t) must be scaled ×58 to fire it as a plain 10 Hz field (20 V/m),
+×866 with a 1 kHz carrier (300 V/m) and ×2640 at 2 kHz (916 V/m): at 2 mA the montage is
+1.7 %, 0.12 % and 0.04 % of threshold. Same picture as the point neuron and Esmaeilpour's
+slices (80 V/m at 2 kHz): direct activation at human currents is out of reach by two to
+three orders of magnitude, so whatever TI does in humans is not threshold firing of such
+axons. Caveats: squid kinetics at 6.3 C, a straight unmyelinated cable with sealed ends
+(end-activation only), no myelin; MRG and a layer-5 cell are the next readouts.
+
 Esmaeilpour 2021's slice thresholds (`ti_sim.membrane.ESMAEILPOUR_2021`) and Gomez-Tames
 2021's mouse thresholds are the targets for a neuron-model readout.

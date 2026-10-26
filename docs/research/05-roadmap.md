@@ -54,7 +54,9 @@ Ordered by what unblocks what.
    `extracellular` mechanism (phi = −E·x, sealed ends, no compiled mod files): a 10 mm, 2 µm
    axon at 6.3 C fires at ~20 V/m per carrier for a plain 10 Hz field, ~200 at a 1 kHz
    carrier and ~500 at 2 kHz (Esmaeilpour's slice threshold at 2 kHz is 80 V/m); squid HH
-   does not fire at 37 C, so warming needs mammalian channels. Next: MRG (McIntyre 2002)
+   does not fire at 37 C, so warming needs mammalian channels. `examples/ernie_axon_readout.py`
+   drives it with Wessel's montage at the putamen: ×58 / ×866 / ×2640 the montage field to
+   fire at 0 / 1 / 2 kHz ([02 §6](02-replication-targets.md)). Next: MRG (McIntyre 2002)
    myelinated axon and an Aberra 2018 layer-5 cell (mod files from ModelDB, licences to check),
    driven at a montage point via `TwoPairSimulation.fields_at`.
 8. **Multi-pair and phase-shifted TI** (Savvateev 2026, Huang 2026 two-array): done

@@ -28,6 +28,7 @@ meshes beside it, and prints a human summary.
 | `ernie_montage_search.py` | `TI_SIM_M2M`; the lead field (75 solves) takes ~6 min once | 7 min | best two-pair montages for the left hippocampus |
 | `ernie_flex_ti.py` | `TI_SIM_M2M` | smoke run 2 min; 50 × 13 run 11 min | SimNIBS TesFlexOptimization with `max_TI`, two free pairs; final ROI mean from the optimiser's head mesh |
 | `mida_ti.py` | `TI_SIM_MIDA` (+ `TI_SIM_MIDA_FIDUCIALS` or `TI_SIM_MIDA_ELECTRODES`) | mesh: minutes | tissue volumes; 10-10 from fiducials; Violante/Wessel montages |
+| `ernie_axon_readout.py` | `TI_SIM_M2M`, NEURON; Wessel montage cached by `ernie_ti.py` | 15 s | gain needed on the montage's E1(t), E2(t) at the putamen to fire a 10 mm HH cable, per carrier |
 | `ernie_placement_sensitivity.py` | `TI_SIM_M2M` | 17 runs, ~20 min | +-5 mm displacement of each Wessel electrode: ROI change (%) and hotspot shift (mm) |
 
 ## Environment
