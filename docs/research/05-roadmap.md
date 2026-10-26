@@ -15,6 +15,12 @@ Ordered by what unblocks what.
 
 ## Next
 
+* Current normalisation (note 02 §2): `TwoPairSimulation` corrected, lead field verified
+  unbiased (`montage.calibrate_leadfield`); check whether `TesFlexOptimization`'s
+  node-current electrode model needs it at all (compare one montage against `TwoPairSimulation`).
+* Sphere: size field to ~3 mm in the brain (the 6 mm interior elements made the envelope
+  argmax meaningless) and report the centre value and shell medians, not an argmax depth.
+
 1. **MIDA with the data** (needs Morgan's download, or the KCL colleague's): run
    `scripts/check-mida.sh`, fix the label-file parser to the real layout, mesh at 1 mm,
    Wessel's montage, compare to 0.26 V/m in striatum; then Violante's.

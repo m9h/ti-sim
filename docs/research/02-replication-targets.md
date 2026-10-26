@@ -41,32 +41,74 @@ rather than our peak-to-trough at 1 mA amplitude (×2 and ×2), or the physical 
 three together would over-explain it; none is stated. The pipeline asserts the geometry
 and records the ratio (5-9) rather than hiding it.
 
-## 2. Grossman 2017, figure S2: the 4-layer sphere (built)
+## 2. Grossman 2017, figure S2: the 4-layer sphere (built, cross-checked)
 
 `examples/layered_sphere.py`: the sphere with the paper's proportions, scaled to R =
-85 mm, built as a 1 mm label volume, meshed with SimNIBS `create_mesh` and solved with
-SimNIBS, two pairs on the equator in layout C and the 1:1, 1:2.5, 1:4 ratios. The paper
-gives no table for the sphere; what the pipeline checks is qualitative and theirs. Result
-(2026-10-25, 1 mA per pair at 1:1): the envelope maximum, 0.056 V/m, lies 55 mm deep while
-|E₁| peaks 14 mm deep under its electrodes at 0.31 V/m; at 1:2.5 and 1:4 (2 mA sum) the
-envelope maximum drops to 0.053 and 0.049 V/m, its depth to 47 and 46 mm, the centre
-envelope from 0.044 to 0.030 V/m, and the peak sits on the weaker pair's side. SimNIBS
-warns that the electrode current calibration error is 12.8 % on this coarse synthetic
-skin surface (10 mm electrodes on 1 mm voxels); a finer `skin_facet_size` is the fix.
+85 mm (scalp 85.000 mm 0.333 S/m, skull 80.750 0.0083, CSF 73.525 1.79, brain 71.570
+0.333), built as a 1 mm label volume, meshed with SimNIBS `create_mesh` and solved with
+SimNIBS, two pairs on the equator in layout C (pair 1 at 180 ± 11.5°, pair 2 at ∓11.5°,
+10 mm electrodes) and the 1:1, 1:2.5, 1:4 ratios. The paper gives no table for the sphere;
+what the pipeline checks is qualitative and theirs.
+
+**Cross-check (2026-10-26)** against an independent DOLFINx solve (CG + BoomerAMG, gmsh CAD
+mesh, equipotential scalp patches; `ci/conductivity-admm/sphere_ti_forward.py` in the
+neurofedora repo) and the analytic n = 1 Legendre solution of the 4-shell sphere with
+point electrodes, 1 mA per pair at 1:1:
+
+| quantity | analytic (point electrodes) | DOLFINx, 2 mm 1 S/m pads, 634k tets | SimNIBS on the same gmsh mesh (262k tets), corrected current | SimNIBS, our 1 mm voxel mesh |
+|---|---|---|---|---|
+| \|E\| per pair at the centre | 0.0283 V/m | 0.0259 | 0.0262 | 0.030 (r < 15 mm mean; the brain elements are 6 mm) |
+| E_AM at the centre | 0.0565 | 0.0518 | 0.049–0.051 | 0.044 (one element) |
+| E_AM maximum in the brain | at the centre | 0.0518, centre | 0.0565 nominal → 0.053, centre (depth 77.8 mm) | 0.056 at 55 mm "depth": the argmax of a plateau |
+| \|E₁\| maximum, depth | | 0.299 V/m, 15.0 mm | 0.318, 15.8 mm | 0.313, 14.0 mm |
+| pair resistance | | 280 Ω | 279 Ω (ΔV / I_h) | 307 / 338 Ω (pair asymmetry from the voxel skin) |
+
+Two lessons. The "55 mm deep" maximum reported on 2026-10-25 was noise: the envelope is a
+plateau over the central 30 mm (shell medians 0.044 → 0.030 V/m from the centre outward,
+shell maxima 0.045–0.056 everywhere) and our voxel-derived mesh has ~6 mm brain elements,
+so the element argmax lands anywhere on it. The finite 10 mm pads lower the centre field by
+8 % against point electrodes because the current concentrates at the pad rim and the pair's
+effective dipole shrinks (framework's analytic check: 80 % of the patch current within 2 mm
+of the rim).
+
+The second lesson is about SimNIBS and affects every head number in this repository:
+**SimNIBS's current normalisation is biased high.** `fem.tdcs` solves with 0/1 V on the
+electrode tops and rescales by a current estimated as the flux of the element-wise J
+through the skin–electrode interface, averaged over the two electrodes. The exact current
+of the discrete solution follows from the energy identity ∫σ|∇v|² dV = ΔV·I_h; on the gmsh
+sphere I_h = 1.061 mA for a nominal 1 mA (SimNIBS's own "calibration error", the
+disagreement between its two electrode fluxes, read 2.7 %), on ernie +4 to +13 %
+depending on electrode size and layering (F3–F4 2 mm pads: +13.5 %; 4 mm gel + 2 mm rubber:
++9.3 %; the 20 mm SimNIBS example electrodes: +4.3 / +9.4 %). `TwoPairSimulation` now saves
+v and J, computes I_h per pair (`head.discrete_current`) and rescales E by I_nominal / I_h;
+`calibration` in every result JSON records both currents and the pair resistance. The lead
+field is **not** affected: `tdcs_leadfield` prescribes each electrode's current through the
+right-hand side (`assemble_rhs`, a Neumann-type formulation) and only logs the flux estimate
+as a mesh-quality warning; `montage.calibrate_leadfield` re-solved all 75 ernie electrodes
+with Dirichlet conditions and the energy-identity current and found SimNIBS/exact =
+0.9985–1.022 (median 1.001). `TesFlexOptimization` uses node currents and is unverified.
+Upstream note drafted in `docs/upstream-drafts.md`.
+
+Our voxel-sphere result at 1:2.5 and 1:4 (2 mA sum): the envelope maximum drops and moves
+to the weaker pair's side, the centre envelope falls from 0.044 to 0.030 V/m; numbers in
+`results/layered_sphere.json` after the corrected rerun.
 
 ## 3. Rampersad 2019: human head numbers (ernie stands in)
 
-| quantity | paper | ours (ernie low-res, SimNIBS conductivities, isotropic; 2026-10-25) |
+| quantity | paper | ours (ernie low-res, SimNIBS conductivities, isotropic; 2026-10-26, fields normalised to the exact discrete current, see §2) |
 |---|---|---|
-| standard montage, 1 mA per pair: hippocampus / pallidum / M1 E_TIfree | 0.064 / 0.11 / 0.25 V/m | SimNIBS example montage F5-P5 / F6-P6, 1 mA, 20 mm: hippocampus 0.15, putamen 0.11, M1 hand 0.145 V/m (ROI medians); GM median 0.10, p99 0.19, max 0.52 |
+| standard montage, 1 mA per pair: hippocampus / pallidum / M1 E_TIfree | 0.064 / 0.11 / 0.25 V/m | SimNIBS example montage F5-P5 / F6-P6, 1 mA, 20 mm: hippocampus 0.14, putamen 0.10, M1 hand 0.135 V/m (ROI medians); GM median 0.097, p99 0.18 (SimNIBS's nominal-current fields were 4 and 9 % higher for the two pairs) |
 | optimised, 2 mA total: L hippocampus / R pallidum / L M1 | 0.24 / 0.37 / 0.56 | L hippocampus: `examples/ernie_montage_search.py`, lead field over the 10-10 cap (75 solves, 6 min), 189,750 two-pair montages from the 25 electrodes within 90 mm of the target at ratios 1:1, 1:2, 1:3 (29 s): best FC5-P9 + FC3-PO9 at 1 + 1 mA, ROI median **0.293 V/m**, p99 of the rest of the brain 0.42, but 198 cm³ of brain above 0.25 V/m: the intensity optimum is not focal, as Rampersad found. The focal ranking (montages within 70 % of the best ROI median, least brain above 0.25 V/m outside the ROI, 300 shortlisted) picks T7-P9 + C5-PO7 at 1 + 1 mA: ROI median **0.245 V/m** with 57 cm³ outside, 3.5× less spill for 16 % less intensity, and the same number as Rampersad's 0.24 |
-| tACS same electrodes | slightly higher, 10-30× the volume > 0.25 V/m | example montage: brain > 0.2 V/m is 31 cm³ for TI vs 430 cm³ for tACS (14×); tACS GM p99 0.32 vs TI 0.19 |
+| tACS same electrodes | slightly higher, 10-30× the volume > 0.25 V/m | example montage: brain > 0.2 V/m is 20 cm³ for TI vs 330 cm³ for tACS (17×); > 0.1 V/m 804 vs 1214 cm³ |
 
 And Wessel 2023's montage on ernie (F3-F4 / TP7-TP8, 2 mA each, 9.8 mm electrodes):
-putamen medians **0.39 / 0.40 V/m** (left / right), hippocampus 0.40 / 0.36, M1 hand
-0.36 / 0.37, GM median 0.20, p99 0.44; brain > 0.2 V/m: 795 cm³ TI vs 1235 cm³ tACS.
-Wessel on MIDA: striatum 0.26 ± 0.04 (p99 0.35), hand knob 0.20. Ours is 1.5× theirs in the
-striatum and 1.8× in M1, with the low-res ernie (SimNIBS skull 0.010 S/m vs the IT'IS LF
+putamen medians **0.35 / 0.37 V/m** (left / right), hippocampus 0.35 / 0.32, M1 hand
+0.31 / 0.34, GM median 0.19, p99 0.43; brain > 0.2 V/m: 728 cm³ TI vs 1235 cm³ tACS. The
+current correction was +13.4 % for F3-F4 and −5.5 % for TP7-TP8 (SimNIBS's estimate can err
+either way; pair resistances 214 and 169 Ω), so the uncorrected 2026-10-25 numbers (0.39 /
+0.40) also had the two carriers in the wrong ratio.
+Wessel on MIDA: striatum 0.26 ± 0.04 (p99 0.35), hand knob 0.20. Ours is 1.4× theirs in the
+striatum and 1.6× in M1, with the low-res ernie (SimNIBS skull 0.010 S/m vs the IT'IS LF
 database, no anisotropy, 8 mm spherical ROIs instead of the striatal label). The deep-to-GM
 median ratio is 1.9, the same qualitative picture as theirs. The MIDA run will show how much
 of the factor is the head and how much the tables.
@@ -77,18 +119,25 @@ the comparison is order-of-magnitude and ratio (deep/cortex, TI/tACS), not equal
 ### Placement sensitivity (Yamada 2026) and free placement (TesFlexOptimization)
 
 `examples/ernie_placement_sensitivity.py`: each Wessel electrode moved ±5 mm along two
-tangential scalp directions, 16 runs (17 min). Putamen median changes: F3 up to 7.0 %,
-F4 3.8 %, TP7 3.1 %, **TP8 12.3 %** (the electrode nearest the right putamen); Yamada report
-0.4-14.9 % for ±10 mm grids, so the ernie montage sits inside their range with half the
-displacement. The deep hotspot (volume-weighted centroid of the top 1 % of the envelope
-within 25 mm of the targets' midpoint; a single element's maximum is a mesh artefact that
-never moves) shifts by up to 8.8 mm (F3), 2.7 (F4), 5.9 (TP7), 4.2 (TP8); Yamada: 0.6-6.9 mm.
+tangential scalp directions, 16 runs (23 min; corrected currents, 2026-10-26). Putamen
+median changes: **F3 up to 7.0 %** (left) / 2.5 % (right), F4 2.1 / 6.0 %, TP7 and TP8
+**0.0 %**: with the currents corrected the F3-F4 pair is the weaker field throughout both
+putamina, so E_AM = 2|E_F3-F4| there and moving the temporo-parietal pair changes nothing
+until the branch flips (the uncorrected run, with F3-F4 13 % too strong and TP7-TP8 5 % too
+weak, had TP8 at 12.3 %: that number was an artefact of the mis-ratioed carriers). Yamada
+report 0.4-14.9 % for ±10 mm grids. The deep hotspot (volume-weighted centroid of the top 1 %
+of the envelope within 25 mm of the targets' midpoint; a single element's maximum is a mesh
+artefact that never moves) shifts by up to 3.8 mm (F3), 4.5 (F4), 2.1 (TP7), 0.5 (TP8);
+Yamada: 0.6-6.9 mm. Lesson for the montage papers: in a two-pair TI montage the envelope in
+the target is set by the weaker pair, so placement tolerance is asymmetric between pairs.
 
 `examples/ernie_flex_ti.py`: SimNIBS's differential-evolution placement of two free pairs
 (10 mm, 1 mA each) maximising mean E_AM,max in the 8 mm left-hippocampus sphere. The smoke
 run (2 iterations, population 4) took 98 s and ended at 0.26 V/m during the search (node-wise
 sources) and 0.15 V/m in the final simulation with real electrodes: already Rampersad's
-range at half his total current. The 50 × 13 run converged after 22 generations and
+range at half his total current (the optimiser's own electrode model prescribes node
+currents, so its fields are not subject to the `fem.tdcs` normalisation bias of §2, but this
+has not been checked against `TwoPairSimulation` yet). The 50 × 13 run converged after 22 generations and
 2392 FEM evaluations (11 min, 2.6 GB): best node-wise value 0.407 V/m; the final simulation
 with real 10 mm electrodes gives a **ROI mean of 0.453 V/m (median 0.423) at 1 mA per
 pair**, 1.5× the cap-restricted lead-field optimum (0.293 at 2 mA) and 1.9× Rampersad's

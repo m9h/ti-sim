@@ -66,6 +66,7 @@ if pos:
         for tag, nm in extra_names.items():
             if sim.in_tags(tag).any():
                 row["rois"][nm] = sim.stats(sim.in_tags(tag))
+        row["calibration"] = sim.calibration
         results["montages"][name] = row
         print(name, {k: round(v["am"]["median"], 3) for k, v in row["rois"].items()})
 save_results(results)

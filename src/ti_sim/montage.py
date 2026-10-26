@@ -41,11 +41,85 @@ def compute_leadfield(m2m_dir, workdir, cap="EEG10-10_UI_Jurak_2007.csv", radius
     lf.field = "E"
     run_simnibs(lf)
     if not os.path.exists(fn):
-        cands = [f for f in os.listdir(out) if f.endswith(".hdf5")]
+        cands = [f for f in os.listdir(out) if f.endswith(".hdf5") and "calibrated" not in f]
         if not cands:
             raise FileNotFoundError(f"no lead field written under {out}")
         fn = os.path.join(out, cands[0])
     return fn
+
+
+def calibrate_leadfield(fn, electrodes_msh=None, cond_list=None, log=print):
+    """Recompute a SimNIBS tetrahedral lead field with the exact current normalisation.
+
+    SimNIBS's `tdcs_leadfield` scales each electrode's solve by an interface-flux estimate of
+    the current that is biased by 5-15 % on 2 mm pads (see ti_sim.head). This solves the
+    same Dirichlet problems (reference at 0 V, electrode at 1 V) on the electrode-placed
+    mesh SimNIBS left beside the hdf5, takes the discrete current from the dissipated power
+    I_h = int sigma |grad v|^2 dV (exact for the P1 solution at 1 V), and writes
+    `<fn>_calibrated.hdf5` with E / I_h in the ROI elements, in the same layout (so
+    `Leadfield` loads it unchanged) plus a `calibration_factor` attribute = |SimNIBS| / |ours|
+    per electrode. ~75 solves, 20-40 min on ernie. Returns the calibrated path (cached)."""
+    import shutil
+
+    import h5py
+    from simnibs import mesh_io
+    from simnibs.simulation import fem
+    from simnibs.utils import cond_utils
+
+    out = fn.replace(".hdf5", "_calibrated.hdf5")
+    if os.path.exists(out):
+        return out
+    with h5py.File(fn, "r") as f:
+        d = f["/mesh_leadfield/leadfields/tdcs_leadfield"]
+        names = [n.decode() if isinstance(n, bytes) else str(n) for n in d.attrs["electrode_names"]]
+        tags = [int(t) for t in d.attrs["electrode_tags"]]
+        ref = d.attrs["reference_electrode"]
+        ref = ref.decode() if isinstance(ref, bytes) else str(ref)
+        rois = [int(t) for t in d.attrs["tissues"]]
+        old = d[:]
+    if electrodes_msh is None:
+        subj_cap = os.path.basename(fn).replace("_leadfield_", "_electrodes_").replace(".hdf5", ".msh")
+        electrodes_msh = os.path.join(os.path.dirname(fn), subj_cap)
+    mesh = mesh_io.read_msh(electrodes_msh)
+    if cond_list is None:  # SimNIBS table; the per-electrode rubber/saline entries are filled on placement
+        std = cond_utils.standard_cond()
+        cond_list = [c.value for c in std]
+        for t in np.unique(mesh.elm.tag1[mesh.elm.elm_type == 4]):
+            if t >= 100 and cond_list[t - 1] is None:
+                cond_list[t - 1] = std[499].value if t >= 500 else std[99].value  # saline 1.0 / rubber 29.4
+    cond = cond_utils.cond2elmdata(mesh, cond_list)
+    tets = mesh.elm.elm_type == 4
+    roi = np.isin(mesh.elm.tag1, rois)
+    vol = mesh.elements_volumes_and_areas().value
+    sigma = cond.value if cond.value.ndim == 1 else None
+    D = [dd.tocsr() for dd in fem.grad_matrix(mesh, split=True)]
+    ref_tag = tags[names.index(ref)]
+    new = np.zeros_like(old)
+    factors = []
+    k = 0
+    for name, tag in zip(names, tags):
+        if name == ref:
+            continue
+        v = fem.TDCSFEMDirichlet(mesh, cond, [ref_tag, tag], [0.0, 1.0]).solve()
+        E = -np.vstack([dd.dot(v) for dd in D]).T * 1e3  # V/m per element (mm mesh)
+        e2 = (E[tets] ** 2).sum(axis=1)
+        if sigma is not None:
+            power = float((sigma[tets] * e2 * vol[tets]).sum() * 1e-9)
+        else:  # tensor conductivity: J . E
+            power = float((np.einsum("ij,ij->i", cond.value[tets].reshape(-1, 3, 3) @ E[tets, :, None], E[tets]) * vol[tets]).sum() * 1e-9)  # fmt: skip
+        i_h = power  # at dV = 1 V, P = I_h * 1 V
+        new[k] = E[roi] / i_h
+        factors.append(float(np.linalg.norm(old[k]) / np.linalg.norm(new[k])))
+        log(f"leadfield {name}: I_h at 1 V = {1e3 * i_h:.3f} mA, R = {1 / i_h:.1f} ohm, "
+            f"SimNIBS/exact = {factors[-1]:.4f}")
+        k += 1
+    shutil.copyfile(fn, out)
+    with h5py.File(out, "a") as f:
+        d = f["/mesh_leadfield/leadfields/tdcs_leadfield"]
+        d[...] = new
+        d.attrs["calibration_factor"] = np.array(factors)
+        d.attrs["calibration"] = "E / I_h, I_h = int sigma |grad v|^2 dV at 1 V (ti_sim.montage.calibrate_leadfield)"
+    return out
 
 
 class Leadfield:

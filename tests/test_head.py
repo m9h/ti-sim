@@ -33,6 +33,10 @@ def test_two_pair_ti_on_ernie(tmp_path):
     foc = sim.focality(0.2)
     assert foc["am_mm3"] <= foc["tacs_mm3"]  # TI never covers more brain than tACS
     assert np.isfinite(sim.am_max).all()
+    # the fields are normalised to the exact discrete current, not SimNIBS's flux estimate
+    for c in sim.calibration:
+        assert c["i_nominal_A"] == 1e-3 and 0.7 < c["factor"] < 1.0  # SimNIBS overestimates by 5-15 %
+        assert 100 < c["resistance_ohm"] < 2000
     e1, e2, am = sim.fields_at(np.vstack([centre, [0, 0, 1000.0]]))  # the deep centre and a point outside
     assert am[0] > 0 and np.all(e1[1] == 0) and am[1] == 0
     fn = sim.write_msh(os.path.join(str(tmp_path), "ti.msh"))

@@ -59,6 +59,7 @@ for name, m in MONTAGES.items():
     deep = np.mean([row["rois"][k]["am"]["median"] for k in ("L putamen", "R putamen", "L hippocampus", "R hippocampus")])
     row["deep_to_gm_median_ratio"] = deep / row["rois"]["GM"]["am"]["median"]
     row["deep_to_gm_p99_ratio"] = deep / row["rois"]["GM"]["am"]["p99"]
+    row["calibration"] = sim.calibration
     results["montages"][name] = row
     print(f"{name}: {row['seconds']:.0f} s; GM median {row['rois']['GM']['am']['median']:.3f} "
           f"p99 {row['rois']['GM']['am']['p99']:.3f} max {row['rois']['GM']['am']['max']:.3f} V/m; "

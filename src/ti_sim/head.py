@@ -11,6 +11,16 @@ hippocampus etc.), plus the unmodulated |E1|, |E2| and the tACS sum for the same
 Electrodes are circles of `radius` on the scalp at 10-10 names or subject coordinates (mm),
 as in SimNIBS's TI.py example. Everything stays in the SimNIBS mm frame; results are V/m
 at the currents given (amperes).
+
+Current normalisation. SimNIBS solves the tDCS problem with 0/1 V on the two electrode tops
+and rescales to the requested current using an estimate of the flux of the element-wise J
+through the skin-electrode interface (fem.tdcs, _calc_flux_electrodes). That estimate is
+biased on coarse electrode meshes: +6 % on a 262k-tet gmsh sphere, +9 to +13 % on ernie
+with 2 mm pads (found 2026-10-26 against a DOLFINx solve and the analytic 4-shell sphere).
+The exact current of the discrete solution follows from the energy identity
+int sigma |grad v|^2 dV = dV * I_h, with dV the potential difference between the electrode
+tops, so `TwoPairSimulation` saves v and J, computes I_h per pair and rescales E by
+I_nominal / I_h. `calibration` records both currents and the pair resistance dV / I_h.
 """
 
 import hashlib
@@ -26,6 +36,27 @@ WM, GM, CSF, BONE, SCALP = 1, 2, 3, 4, 5
 
 def _key(parts):
     return hashlib.sha1(json.dumps(parts, sort_keys=True, default=str).encode()).hexdigest()[:12]
+
+
+def discrete_current(m, i_nominal):
+    """Exact current of a SimNIBS tDCS solution (fields v, E, J on the full mesh with its
+    electrodes) from the energy identity P = int J . E dV = dV * I_h, with dV the potential
+    difference between the two electrode tops (SimNIBS Dirichlet surfaces 2100+). Returns
+    the nominal and discrete currents (A), the factor i_nominal / I_h that rescales SimNIBS's
+    fields to the requested current, and the pair resistance dV / I_h (ohm)."""
+    v = m.field["v"].value
+    tri = m.elm.elm_type == 2
+    tops = [t for t in np.unique(m.elm.tag1[tri]) if 2100 <= t < 2200]
+    if len(tops) != 2:
+        raise RuntimeError(f"expected two electrode top surfaces (tags 2100+), found {tops}")
+    means = [v[np.unique(m.elm.node_number_list[tri & (m.elm.tag1 == t)][:, :3]) - 1].mean() for t in tops]
+    d_v = abs(means[0] - means[1])
+    tets = m.elm.elm_type == 4
+    vol = m.elements_volumes_and_areas().value[tets]
+    power = float((np.einsum("ij,ij->i", m.field["J"].value[tets], m.field["E"].value[tets]) * vol).sum() * 1e-9)
+    i_h = power / d_v
+    return {"i_nominal_A": float(i_nominal), "i_discrete_A": float(i_h), "factor": float(abs(i_nominal) / i_h),
+            "resistance_ohm": float(d_v / i_h), "simnibs_bias_percent": float((i_h / abs(i_nominal) - 1) * 100)}
 
 
 class TwoPairSimulation:
@@ -46,7 +77,7 @@ class TwoPairSimulation:
                 else os.path.splitext(os.path.basename(fnamehead))[0])
         self.subject = subj
         key = _key([self.pairs, self.currents, self.radius, self.thickness, self.cond,
-                    self.extra_cond, subj])
+                    self.extra_cond, subj, "calibration=discrete"])
         self.workdir = os.path.join(str(workdir), f"ti_{subj}_{key}")
         self.files = [os.path.join(self.workdir, f"{subj}_TDCS_{k}_scalar.msh") for k in (1, 2)]
         if not all(os.path.exists(f) for f in self.files):
@@ -62,7 +93,7 @@ class TwoPairSimulation:
             s.subpath = self.m2m_dir
         else:
             s.fnamehead = self.fnamehead
-        s.pathfem, s.open_in_gmsh, s.fields = self.workdir, False, "eE"
+        s.pathfem, s.open_in_gmsh, s.fields = self.workdir, False, "veEJ"
         for (a, b), i in zip(self.pairs, self.currents):
             t = s.add_tdcslist()
             t.currents = [i, -i]
@@ -81,14 +112,17 @@ class TwoPairSimulation:
 
         keep = np.hstack((np.arange(ElementTags.TH_START, ElementTags.SALINE_START - 1),
                           np.arange(ElementTags.TH_SURFACE_START, ElementTags.SALINE_TH_SURFACE_START - 1)))
-        ms = [mesh_io.read_msh(f).crop_mesh(tags=keep) for f in self.files]
+        full = [mesh_io.read_msh(f) for f in self.files]
+        self.calibration = [discrete_current(m, i) for m, i in zip(full, self.currents)]
+        ms = [m.crop_mesh(tags=keep) for m in full]
+        del full
         tets = ms[0].elm.elm_type == 4
         if not np.array_equal(ms[0].elm.tag1, ms[1].elm.tag1):
             raise RuntimeError("the two SimNIBS runs produced different meshes")
         self.mesh = ms[0]
         self.tags = ms[0].elm.tag1[tets]
-        self.e1 = ms[0].field["E"].value[tets]
-        self.e2 = ms[1].field["E"].value[tets]
+        self.e1 = ms[0].field["E"].value[tets] * self.calibration[0]["factor"]
+        self.e2 = ms[1].field["E"].value[tets] * self.calibration[1]["factor"]
         self.centres = ms[0].elements_baricenters().value[tets]
         self.volumes = ms[0].elements_volumes_and_areas().value[tets]
         self.am_max = envelope.max_envelope(self.e1, self.e2)

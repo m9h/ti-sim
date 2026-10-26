@@ -97,7 +97,9 @@ the SimNIBS example head with ROI statistics at MNI targets and TI-vs-tACS focal
 `ti_sim.mida` maps all **115 MIDA structures** to SimNIBS tissues (deep nuclei kept as
 ROIs) and meshes the model with `create_mesh`; the same route is exercised on a 4-layer
 sphere. MIDA's licence forbids redistribution, so you bring your own copy
-(`scripts/check-mida.sh`).
+(`scripts/check-mida.sh`). All head fields are normalised to the exact current of the
+discrete solution, not SimNIBS's flux estimate, which we found 5-13 % off on 2 mm pads
+([note 02 §2](docs/research/02-replication-targets.md)); the lead field is unaffected.
 
 ### 🔁 4. What SimNIBS gives us → [note 03](docs/research/03-simnibs-reuse.md)
 

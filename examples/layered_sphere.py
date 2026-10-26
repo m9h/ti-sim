@@ -56,6 +56,7 @@ for label, (i1, i2) in {"1:1": (1e-3, 1e-3), "1:2.5": (2e-3 / 3.5, 2e-3 * 2.5 / 
            "am_max_depth_mm": float(R - np.linalg.norm(c[np.argmax(am)])),
            "e1_max_depth_mm": float(R - np.linalg.norm(c[np.argmax(e1)])),
            "nodes": int(sim.mesh.nodes.nr), "tets": int(gm.sum())}
+    row["calibration"] = sim.calibration
     results["ratios"][label] = row
     print(f"{label}: E_AM max {row['am_max_brain']:.3f} V/m at depth {row['am_max_depth_mm']:.0f} mm, "
           f"x-profile peak at {row['am_peak_x_over_R']:+.2f} R; centre {row['am_at_centre']:.3f} V/m; "
