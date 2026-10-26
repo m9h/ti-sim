@@ -187,8 +187,23 @@ estimate was 2.5 % off for F3-F4 but **64 % off for TP7-TP8**, far more than on 
 hippocampus 0.38, thalamus 0.31, GM 0.275 (p99 0.73), brain 0.35. That is 2.1× Wessel's
 striatal 0.26 and 1.5× our ernie 0.35/0.37. Note that halving the peak-to-trough envelope,
 the definition question in `docs/upstream-drafts.md` §2, gives 0.27 against their 0.26 ±
-0.04; the 1 mm run (`mida_ds2.json`, in progress) decides how much is resolution before that
-reading is taken seriously. Violante's montage was skipped (no e1-e4 positions yet).
+0.04; the 1 mm run decides how much is resolution before that reading is taken seriously.
+Violante's montage was skipped (no e1-e4 positions yet).
+
+### The 1 mm run (`TI_SIM_MIDA_DS=2`, the comparison run)
+
+**3,520,930 tets in 43.7 min, 5.5 GB RSS** (the handoff's 20-30 GB budget was pessimistic;
+16 threads were available but SimNIBS's meshing is mostly serial). Mesh volumes are now within
+3 % of the voxel counts for every tissue except blood (33 vs 43 cm³) and the sub-cm³ nuclei,
+and the current estimate is back to normal (2.7 % and 0.7 % off; the 64 % at 2 mm was the
+coarse pad). Wessel medians at 1 mm: **putamen 0.493 V/m** (p99 0.59), caudate 0.47, nucleus
+accumbens 0.48, globus pallidus 0.46, hippocampus 0.33, thalamus 0.29, GM 0.257 (p99 0.61),
+brain 0.32; the deep-to-GM ratio is 1.9, the same as on ernie and as in their figure. Going
+from 2 to 1 mm lowered the deep medians by 8-13 %, so the residual factor against Wessel's
+0.26 ± 0.04 (**1.9×**) is not resolution. The candidates are the envelope definition
+(peak-to-trough vs half, exactly a factor 2), the conductivity table (SimNIBS defaults vs the
+IT'IS LF database v4.0 they used, which can be tried with `TI_SIM_COND`) and the missing
+anisotropy. The 0.5 mm native run is in progress for completeness.
 
 ## 5. Phantom and cadaver measurements (planned)
 
