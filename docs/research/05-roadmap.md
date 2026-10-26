@@ -18,13 +18,16 @@ Ordered by what unblocks what.
 1. **MIDA with the data** (needs Morgan's download, or the KCL colleague's): run
    `scripts/check-mida.sh`, fix the label-file parser to the real layout, mesh at 1 mm,
    Wessel's montage, compare to 0.26 V/m in striatum; then Violante's.
-2. **Electrode positions on MIDA**: 10-10 from fiducials for custom meshes.
+2. ~~Electrode positions on MIDA~~: done 2026-10-25, `ti_sim.electrodes.ten_ten` (geodesic
+   10-10 from Nz/Iz/LPA/RPA on any skin surface; 6.4 mm mean against ernie's template cap).
+   Still needed: the four MIDA fiducial coordinates.
 3. **The amplitude factor** in the phantom: write to Grossman's group? (Morgan's call;
    draft in docs/upstream-drafts.md) or find the definition in the Cell supplement.
 4. **Lead field on ernie** (`TI_SIM_LEADFIELD=1`, 20-40 min) and the Rampersad
    comparison; then wrap `TesFlexOptimization` for free electrode placement.
-5. **Mesh-realisation and placement sensitivity** (Ivanov 2026, Yamada 2026): repeat the
-   ernie montages over N meshes / ±5 mm displacements; report CoV.
+5. **Mesh-realisation and placement sensitivity** (Ivanov 2026, Yamada 2026): placement
+   done as `examples/ernie_placement_sensitivity.py` (±5 mm, 16 runs); mesh realisations
+   need charm reruns (not on the low-res ernie).
 6. **Anisotropy**: `anisotropy_type='vn'` on a charm head with DTI (ernie lowres has none).
 7. **Neuron readout**: NEURON (python3-neuron is in Fedora) with an MRG axon and a
    layer-5 pyramidal cell under E(t) from a montage; score montages by response, and

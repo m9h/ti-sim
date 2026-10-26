@@ -26,7 +26,8 @@ meshes beside it, and prints a human summary.
 | `layered_sphere.py` | SimNIBS | ~2 min (mesh cached) | focus depth and steering on the 4-layer sphere |
 | `ernie_ti.py` | `TI_SIM_M2M` | ~2.5 min (cached) | ROI statistics for two montages, `ernie_*.msh` for gmsh |
 | `ernie_montage_search.py` | `TI_SIM_M2M`, 20-40 min once for the lead field | | best two-pair montages for the left hippocampus |
-| `mida_ti.py` | `TI_SIM_MIDA` (+ `TI_SIM_MIDA_ELECTRODES`) | mesh: minutes | tissue volumes; Violante/Wessel montages |
+| `mida_ti.py` | `TI_SIM_MIDA` (+ `TI_SIM_MIDA_FIDUCIALS` or `TI_SIM_MIDA_ELECTRODES`) | mesh: minutes | tissue volumes; 10-10 from fiducials; Violante/Wessel montages |
+| `ernie_placement_sensitivity.py` | `TI_SIM_M2M` | 17 runs, ~20 min | +-5 mm displacement of each Wessel electrode: ROI change (%) and hotspot shift (mm) |
 
 ## Environment
 
@@ -40,7 +41,8 @@ meshes beside it, and prints a human summary.
 | `TI_SIM_FETCH=1` | allow `scripts/fetch-ernie.sh` in the pipeline | off |
 | `TI_SIM_COND` | conductivity table: `simnibs`, `rampersad`, or `simnibs,4=0.0085` overrides | `simnibs` |
 | `TI_SIM_LEADFIELD=1` | run the lead-field montage search stage | off |
-| `TI_SIM_MIDA`, `TI_SIM_MIDA_DS`, `TI_SIM_MIDA_ZMIN`, `TI_SIM_MIDA_ELECTRODES` | MIDA directory, downsample factor (2), neck cut (mm), electrode JSON | unset |
+| `TI_SIM_MIDA`, `TI_SIM_MIDA_DS`, `TI_SIM_MIDA_ZMIN`, `TI_SIM_MIDA_FIDUCIALS`, `TI_SIM_MIDA_ELECTRODES` | MIDA directory, downsample factor (2), neck cut (mm), fiducials JSON (Nz/Iz/LPA/RPA -> geodesic 10-10), electrode JSON | unset |
+| `TI_SIM_SHIFT_MM` | displacement for the placement-sensitivity example | 5 |
 | `OMP_NUM_THREADS` | SimNIBS/FEM threads | 4 |
 
 ## Pipeline (`tests/pipeline.bats`)
