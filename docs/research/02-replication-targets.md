@@ -88,8 +88,14 @@ never moves) shifts by up to 8.8 mm (F3), 2.7 (F4), 5.9 (TP7), 4.2 (TP8); Yamada
 (10 mm, 1 mA each) maximising mean E_AM,max in the 8 mm left-hippocampus sphere. The smoke
 run (2 iterations, population 4) took 98 s and ended at 0.26 V/m during the search (node-wise
 sources) and 0.15 V/m in the final simulation with real electrodes: already Rampersad's
-range at half his total current. A 50 × 13 run is recorded in results/ernie_flex_ti_full.json
-when it finishes.
+range at half his total current. The 50 × 13 run converged after 22 generations and
+2392 FEM evaluations (11 min, 2.6 GB): best node-wise value 0.407 V/m; the final simulation
+with real 10 mm electrodes gives a **ROI mean of 0.453 V/m (median 0.423) at 1 mA per
+pair**, 1.5× the cap-restricted lead-field optimum (0.293 at 2 mA) and 1.9× Rampersad's
+0.24: free placement finds positions the 10-10 cap does not offer. The price is spill:
+511 cm³ of other brain above 0.25 V/m and a GM p99 of 0.465 V/m, i.e. the hippocampus gets
+about what the most exposed cortex gets. Focality needs the "focality" goal with
+thresholds (SimNIBS's tes_flex_ti_focality example), which is the next run.
 
 ## 4. Violante 2023 and Wessel 2023 on MIDA (needs the data)
 

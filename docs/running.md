@@ -26,7 +26,7 @@ meshes beside it, and prints a human summary.
 | `layered_sphere.py` | SimNIBS | ~2 min (mesh cached) | focus depth and steering on the 4-layer sphere |
 | `ernie_ti.py` | `TI_SIM_M2M` | ~2.5 min (cached) | ROI statistics for two montages, `ernie_*.msh` for gmsh |
 | `ernie_montage_search.py` | `TI_SIM_M2M`; the lead field (75 solves) takes ~6 min once | 7 min | best two-pair montages for the left hippocampus |
-| `ernie_flex_ti.py` | `TI_SIM_M2M` | smoke run 15-30 min, full run hours | SimNIBS TesFlexOptimization with `max_TI`, two free pairs |
+| `ernie_flex_ti.py` | `TI_SIM_M2M` | smoke run 2 min; 50 × 13 run 11 min | SimNIBS TesFlexOptimization with `max_TI`, two free pairs; final ROI mean from the optimiser's head mesh |
 | `mida_ti.py` | `TI_SIM_MIDA` (+ `TI_SIM_MIDA_FIDUCIALS` or `TI_SIM_MIDA_ELECTRODES`) | mesh: minutes | tissue volumes; 10-10 from fiducials; Violante/Wessel montages |
 | `ernie_placement_sensitivity.py` | `TI_SIM_M2M` | 17 runs, ~20 min | +-5 mm displacement of each Wessel electrode: ROI change (%) and hotspot shift (mm) |
 
