@@ -46,8 +46,13 @@ and records the ratio (5-9) rather than hiding it.
 `examples/layered_sphere.py`: the sphere with the paper's proportions, scaled to R =
 85 mm, built as a 1 mm label volume, meshed with SimNIBS `create_mesh` and solved with
 SimNIBS, two pairs on the equator in layout C and the 1:1, 1:2.5, 1:4 ratios. The paper
-gives no table for the sphere; what the pipeline checks is qualitative and theirs: the
-envelope peaks deeper than the unmodulated field and moves towards the weaker pair.
+gives no table for the sphere; what the pipeline checks is qualitative and theirs. Result
+(2026-10-25, 1 mA per pair at 1:1): the envelope maximum, 0.056 V/m, lies 55 mm deep while
+|E₁| peaks 14 mm deep under its electrodes at 0.31 V/m; at 1:2.5 and 1:4 (2 mA sum) the
+envelope maximum drops to 0.053 and 0.049 V/m, its depth to 47 and 46 mm, the centre
+envelope from 0.044 to 0.030 V/m, and the peak sits on the weaker pair's side. SimNIBS
+warns that the electrode current calibration error is 12.8 % on this coarse synthetic
+skin surface (10 mm electrodes on 1 mm voxels); a finer `skin_facet_size` is the fix.
 
 ## 3. Rampersad 2019: human head numbers (ernie stands in)
 

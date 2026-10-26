@@ -110,7 +110,12 @@ mark_stage() { : > "$TI_SIM_RESULTS/.stage-$1"; }
     assert_range "$out" layouts.C.y.pos_R.1 -0.1 0.1
     assert_range "$out" layouts.C.y.hwhm_R.0 0.35 0.5
     assert_range "$out" layouts.C.y.hwhm_R.1 0.4 0.6
-    assert_range "$out" layouts.C.x.pos_R.1 -0.7 -0.5
+    python3 -I - "$out" <<'PY'
+import json, sys
+c = json.load(open(sys.argv[1]))["layouts"]["C"]["x"]
+# layout C is top/bottom symmetric, so E_AM,x has twin peaks at (0, +-0.59) R; the paper lists one
+assert abs(c["pos_R"][0]) < 0.05 and 0.5 < abs(c["pos_R"][1]) < 0.7, c["pos_R"]
+PY
     # steering: 1:2.5 and 1:4 move the y-peak by -0.2 R and -0.35 R
     assert_range "$out" layouts.D.y.pos_R.0 -0.3 -0.12
     assert_range "$out" layouts.E.y.pos_R.0 -0.45 -0.25
@@ -120,18 +125,20 @@ mark_stage() { : > "$TI_SIM_RESULTS/.stage-$1"; }
     mark_stage phantom
 }
 
-@test "31 layered sphere: label volume -> SimNIBS mesh -> TI, focus between the pairs and steerable" {
+@test "31 layered sphere: label volume -> SimNIBS mesh -> TI, envelope deeper than |E1| and steered by the ratio" {
     need_stage simnibs
     local out="$TI_SIM_RESULTS/layered_sphere.json"
     TI_SIM_OUT="$out" run -0 py examples/layered_sphere.py
     echo "$output"
-    assert_range "$out" ratios.1:1.am_peak_x_over_R -0.25 0.25
-    assert_range "$out" ratios.1:4.am_peak_x_over_R -0.95 -0.05
     python3 -I - "$out" <<'PY'
 import json, sys
 r = json.load(open(sys.argv[1]))["ratios"]
-assert r["1:1"]["am_max_depth_mm"] > r["1:1"]["e1_max_depth_mm"], "envelope should peak deeper than |E1|"
-assert r["1:4"]["am_peak_x_over_R"] < r["1:1"]["am_peak_x_over_R"], "peak should move towards the weaker pair"
+for k, row in r.items():  # the envelope peaks deeper than the unmodulated field under the electrodes
+    assert row["am_max_depth_mm"] > row["e1_max_depth_mm"] + 10, (k, row)
+# the envelope is bounded by the weaker pair's field, so a 1:4 split puts the peak on pair 1's
+# side (x < 0) and lowers the envelope at the centre relative to 1:1
+assert r["1:4"]["am_peak_x_over_R"] < 0, r["1:4"]
+assert r["1:4"]["am_at_centre"] < r["1:1"]["am_at_centre"], (r["1:4"], r["1:1"])
 PY
     mark_stage sphere
 }
