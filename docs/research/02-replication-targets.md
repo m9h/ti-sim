@@ -221,6 +221,21 @@ in the striatum, so the model is mesh-converged at 1 mm and the 1 mm run is the 
 (44 min vs 111). The 1.9× against Wessel's 0.26 stands as a definition/conductivity question,
 not a mesh one.
 
+### Fiducial check and the corrected cap (`fiducials_v2.json`)
+
+The 3dslicer session checked the rule-placed fiducials on the MIDA volume in world mm: all
+four on the skin; Nz 4.3 mm and Iz 5.3 mm off the midline (the PA midpoint is x = −0.6),
+Nz's soft-tissue notch at z ≈ −8 rather than −5; LPA on the tragal edge rather than 3 mm in
+front of it; RPA fine; MIDA's occiput has no resolved inion, so Iz's height is ±5 mm by
+nature. The rebuilt 10-10 from the same fiducials agreed with ours to 2-5 mm for Cz/TP7/TP8
+(13-14 mm from the nearest pinna voxel, above and behind the ear) and 12-15 mm for F3/F4,
+which is the spread between Fz–F7 midpoint conventions. With the corrected fiducials
+(`fiducials_v2.json`: Nz [−0.6, 110.5, −8.0], Iz [−0.6, −82.8, 6.5], LPA [−74.2, 20.6,
+−15.6], RPA [72.0, 13.6, −20.0]) the electrodes move 3-6 mm (F3 6.0, TP7 5.3, TP8 3.5,
+F4 3.3, Cz 3.1) and the 1 mm Wessel medians change by under 2 %: putamen 0.485 (was
+0.493), caudate 0.464, hippocampus 0.319, GM 0.253. Same insensitivity as the ernie
+placement study. v2 is the cap to use from here.
+
 ### Conductivity table on the 1 mm mesh (`TI_SIM_COND=rampersad`)
 
 Same mesh and electrodes, Rampersad's table (skull 0.007 instead of 0.010 S/m, eyes 1.5),

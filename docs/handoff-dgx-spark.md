@@ -86,7 +86,8 @@ numbers in `docs/research/02-replication-targets.md` §4. The host dir is `/mnt/
 (`inputs/` → `/data`, `outputs/` → `/results`); runs use `TI_SIM_WORK=/data/ti-sim-work`
 because `examples/mida_ti.py` defaults to a relative path inside the read-only package.
 Open: Violante's e1-e4; the IT'IS conductivity table (`TI_SIM_COND`) and the envelope
-definition against Wessel's 0.26 V/m; a Slicer check of the constructed electrodes; the
+definition against Wessel's 0.26 V/m; (the Slicer check of the fiducials is done, see 02 §4:
+use `fiducials_v2.json`); a Slicer check of the constructed electrodes; the
 phantom test `test_envelope_map_symmetry_and_peak` picks the mirror peak (y = +0.59) on
 aarch64 for the symmetric layout, so its sign assertion should accept either.
 
